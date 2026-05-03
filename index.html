@@ -1,0 +1,3019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nudge — Beginner Gym Companion</title>
+
+<style>
+:root{
+  --bg:#070807;
+  --panel:#111214;
+  --panel2:#181a1d;
+  --card:#151619;
+  --line:#2a2d31;
+  --text:#f5f5f3;
+  --muted:#aaa9b2;
+  --soft:#73727b;
+  --green:#65c783;
+  --green2:#1f7a3a;
+  --amber:#e2a64c;
+  --red:#ef6d5a;
+  --blue:#83b8ff;
+  --shadow:0 18px 60px rgba(0,0,0,.38);
+  --radius:22px;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  background:#050605;
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center
+}
+
+.app{
+  width:min(100%,1180px);
+  min-height:100vh;
+  background:linear-gradient(180deg,#080a09,#050605);
+  position:relative
+}
+
+.mobile-frame{
+  max-width:440px;
+  margin:0 auto;
+  min-height:100vh;
+  position:relative;
+  background:linear-gradient(180deg,#090b0a,#050605);
+  display:flex;
+  flex-direction:column
+}
+
+.statusbar{
+  height:34px;
+  padding:12px 22px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  font-weight:800;
+  color:rgba(255,255,255,.78);
+  position:relative;
+  z-index:130;
+  background:#090b0a
+}
+
+.icons{display:flex;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.65)}
+.pill{width:18px;height:8px;border-radius:99px;background:rgba(255,255,255,.82)}
+
+#topNav{
+  position:sticky;
+  top:0;
+  z-index:140;
+  padding:10px 20px 8px;
+  background:linear-gradient(180deg,#090b0a 0%,rgba(9,11,10,.96) 72%,rgba(9,11,10,0) 100%)
+}
+
+main{
+  flex:1;
+  overflow-y:auto;
+  padding:20px 20px 44px;
+  scrollbar-width:none
+}
+
+.camera main{
+  padding:0;
+  height:100vh;
+  overflow:hidden
+}
+
+.camera .statusbar,
+.camera #topNav{display:none!important}
+
+.screen{
+  animation:fade .24s ease both
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+
+@keyframes pulse-green{
+  0%,100%{box-shadow:0 0 0 0 rgba(101,199,131,.4)}
+  50%{box-shadow:0 0 0 8px rgba(101,199,131,0)}
+}
+
+h1,h2,h3,p{margin:0}
+
+h1{
+  font-size:42px;
+  line-height:.96;
+  letter-spacing:-.06em
+}
+
+h2{
+  font-size:31px;
+  line-height:1;
+  letter-spacing:-.045em
+}
+
+h3{
+  font-size:18px;
+  line-height:1.12;
+  letter-spacing:-.025em
+}
+
+p{
+  font-size:14px;
+  line-height:1.5;
+  color:var(--muted)
+}
+
+.lead{font-size:15px;margin-top:12px}
+
+.tiny{
+  font-size:12px;
+  line-height:1.35;
+  color:var(--muted)
+}
+
+.eyebrow{
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:var(--muted);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:13px
+}
+
+.eyebrow:before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green)
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:18px
+}
+
+.btn{
+  border:0;
+  border-radius:999px;
+  min-height:48px;
+  padding:13px 17px;
+  font-weight:900;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  transition:.15s
+}
+
+.btn:active{transform:scale(.98)}
+
+.btn.primary{
+  width:100%;
+  background:var(--green);
+  color:#051007
+}
+
+.btn.dark{
+  background:#fff;
+  color:#080908
+}
+
+.btn.secondary{
+  background:var(--panel2);
+  border:1px solid var(--line);
+  color:var(--text)
+}
+
+.btn.ghost{
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--muted)
+}
+
+.btn.small{
+  min-height:38px;
+  padding:9px 12px;
+  font-size:12px
+}
+
+.btn.learn-btn{
+  background:rgba(131,184,255,.12);
+  border:1px solid rgba(131,184,255,.25);
+  color:var(--blue);
+  min-height:34px;
+  padding:7px 11px;
+  font-size:11px
+}
+
+.card{
+  background:linear-gradient(180deg,#141518,#101113);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow)
+}
+
+.pad{padding:18px}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:999px;
+  padding:7px 10px;
+  background:#202226;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap
+}
+
+.badge.green{
+  background:rgba(101,199,131,.14);
+  color:#9eefb6
+}
+
+.badge.red{
+  background:rgba(239,109,90,.14);
+  color:#ff9e8f
+}
+
+.badge.amber{
+  background:rgba(226,166,76,.14);
+  color:#ffd08b
+}
+
+.badge.blue{
+  background:rgba(131,184,255,.14);
+  color:#b0d0ff
+}
+
+.top-nav{
+  height:62px;
+  width:100%;
+  background:rgba(21,22,25,.88);
+  border:1px solid var(--line);
+  border-radius:22px;
+  backdrop-filter:blur(20px);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:7px;
+  box-shadow:0 18px 55px rgba(0,0,0,.42)
+}
+
+.nav{
+  border:0;
+  background:transparent;
+  color:var(--soft);
+  border-radius:18px;
+  font-size:9px;
+  font-weight:900;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  align-items:center;
+  justify-content:center
+}
+
+.nav b{
+  font-size:16px;
+  line-height:1
+}
+
+.nav.active{
+  background:var(--green);
+  color:#061108
+}
+
+.stack{display:grid;gap:12px}
+
+.sticky-cta{
+  position:sticky;
+  bottom:0;
+  z-index:60;
+  padding:18px 0 6px;
+  background:linear-gradient(to top,#050605 72%,rgba(5,6,5,0))
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  min-height:255px;
+  padding:20px;
+  border-radius:32px;
+  background:radial-gradient(circle at 85% 15%,rgba(101,199,131,.22),transparent 35%),linear-gradient(145deg,#181a1d,#090a0b);
+  border:1px solid var(--line)
+}
+
+.hero-copy{
+  width:56%;
+  position:relative;
+  z-index:2
+}
+
+.hero-copy p{margin-top:9px}
+
+.pokemon{
+  position:absolute;
+  right:0;
+  bottom:6px;
+  width:178px;
+  height:178px;
+  object-fit:contain;
+  animation:float 3.4s ease-in-out infinite;
+  filter:drop-shadow(0 22px 22px rgba(0,0,0,.35))
+}
+
+.xpbar{
+  height:10px;
+  background:#25272b;
+  border-radius:99px;
+  overflow:hidden;
+  margin-top:14px
+}
+
+.xpbar>span{
+  display:block;
+  height:100%;
+  width:72%;
+  background:var(--green);
+  border-radius:99px
+}
+
+.metric-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px
+}
+
+.metric{
+  background:#121316;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px;
+  text-align:center
+}
+
+.metric strong{
+  display:block;
+  font-size:20px
+}
+
+.metric span{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--muted);
+  font-weight:900
+}
+
+.goal{
+  width:100%;
+  text-align:left;
+  background:#121316;
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:22px;
+  padding:17px;
+  display:grid;
+  grid-template-columns:1fr 42px;
+  gap:12px;
+  align-items:center
+}
+
+.goal.selected{
+  border-color:var(--green);
+  background:#111a14
+}
+
+.goal .ico{
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  background:#202226;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  color:var(--green)
+}
+
+.stage{
+  min-height:320px;
+  border-radius:32px;
+  background:radial-gradient(circle at 50% 32%,rgba(255,255,255,.1),transparent 35%),linear-gradient(180deg,#17191c,#111214);
+  border:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column
+}
+
+.stage img{
+  width:178px;
+  height:178px;
+  object-fit:contain;
+  animation:float 3s ease-in-out infinite
+}
+
+.stage .name{
+  text-transform:capitalize;
+  font-size:32px;
+  font-weight:950;
+  letter-spacing:-.05em
+}
+
+.swap{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:14px
+}
+
+.swap button{
+  background:#121316;
+  border:1px solid var(--line);
+  border-radius:18px;
+  color:var(--text);
+  padding:9px
+}
+
+.swap button.active{
+  border-color:var(--green);
+  background:#101a13
+}
+
+.swap img{
+  width:52px;
+  height:52px;
+  object-fit:contain
+}
+
+.swap span{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  text-transform:capitalize
+}
+
+.routine{padding:17px}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  padding:13px 0;
+  border-top:1px solid var(--line)
+}
+
+.row:first-child{border-top:0}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:14px 0
+}
+
+.tab{
+  border:1px solid var(--line);
+  background:#111316;
+  color:var(--muted);
+  border-radius:999px;
+  padding:9px 13px;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap
+}
+
+.tab.active{
+  background:var(--green);
+  color:#071107;
+  border-color:var(--green)
+}
+
+.set-table{
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  margin-top:13px;
+  background:#0e0f11
+}
+
+.set-row{
+  display:grid;
+  grid-template-columns:34px 1fr 58px 58px 38px;
+  gap:7px;
+  align-items:center;
+  padding:10px;
+  border-top:1px solid var(--line);
+  font-size:12px
+}
+
+.set-row:first-child{border-top:0}
+
+.set-row.head{
+  background:#1b1d20;
+  font-size:10px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900
+}
+
+.set-row.done{
+  background:rgba(101,199,131,.09)
+}
+
+.set-input{
+  width:100%;
+  min-height:32px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#121316;
+  color:var(--text);
+  font-weight:850;
+  text-align:center
+}
+
+.check{
+  width:32px;
+  height:32px;
+  border:0;
+  border-radius:50%;
+  background:#2a2d31;
+  color:#fff;
+  font-weight:900
+}
+
+.check.done{
+  background:var(--green);
+  color:#061108
+}
+
+/* Tutorial / Learn styles */
+.tutorial-step{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:10px 0;
+  border-top:1px solid var(--line)
+}
+
+.tutorial-step:first-child{border-top:0}
+
+.step-num{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:rgba(101,199,131,.18);
+  border:1px solid rgba(101,199,131,.35);
+  color:#9eefb6;
+  font-size:11px;
+  font-weight:900;
+  display:grid;
+  place-items:center;
+  flex-shrink:0
+}
+
+.mistake-row{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:9px 0;
+  border-top:1px solid var(--line)
+}
+
+.mistake-row:first-child{border-top:0}
+
+.tip-card{
+  background:rgba(101,199,131,.07);
+  border:1px solid rgba(101,199,131,.2);
+  border-radius:18px;
+  padding:14px;
+  margin-top:14px
+}
+
+.cue-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:12px;
+  padding:8px 12px;
+  background:rgba(131,184,255,.1);
+  border:1px solid rgba(131,184,255,.2);
+  color:#b0d0ff;
+  font-size:12px;
+  font-weight:700;
+  margin:4px 4px 4px 0
+}
+
+.learn-card{
+  background:linear-gradient(135deg,#12151a,#0e1016);
+  border:1px solid rgba(131,184,255,.18);
+  border-radius:22px;
+  padding:16px;
+  margin-top:10px
+}
+
+.learn-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px
+}
+
+.muscle-section{
+  margin-bottom:20px
+}
+
+.muscle-label{
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--muted);
+  margin-bottom:10px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line)
+}
+
+.ex-card{
+  background:#111316;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px
+}
+
+.form-cue-bar{
+  background:rgba(226,166,76,.08);
+  border:1px solid rgba(226,166,76,.2);
+  border-radius:16px;
+  padding:12px 14px;
+  margin-top:10px;
+  margin-bottom:4px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start
+}
+
+.form-cue-bar .icon{
+  font-size:16px;
+  flex-shrink:0;
+  margin-top:1px
+}
+
+/* Modal */
+.modal{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  z-index:220;
+  display:grid;
+  place-items:end center;
+  padding:18px
+}
+
+.sheet{
+  width:100%;
+  max-height:88vh;
+  overflow-y:auto;
+  background:#101113;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:18px;
+  box-shadow:var(--shadow)
+}
+
+.mode-option{
+  width:100%;
+  text-align:left;
+  background:#151619;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  color:var(--text);
+  display:grid;
+  grid-template-columns:1fr 34px;
+  gap:14px;
+  align-items:center;
+  margin-top:10px
+}
+
+.mode-option:hover{
+  border-color:rgba(101,199,131,.55);
+  background:#111a14
+}
+
+.mode-option strong{
+  display:block;
+  font-size:16px;
+  margin-bottom:4px
+}
+
+.mode-option span{
+  font-size:12px;
+  line-height:1.35;
+  color:var(--muted)
+}
+
+.mode-option b{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--green);
+  color:#061108
+}
+
+.search{
+  width:100%;
+  background:#151619;
+  border:1px solid var(--line);
+  border-radius:16px;
+  color:var(--text);
+  padding:14px;
+  margin:12px 0
+}
+
+.chiprow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0
+}
+
+.chip{
+  border:1px solid var(--line);
+  background:#151619;
+  color:var(--muted);
+  border-radius:999px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:900
+}
+
+.chip.active{
+  background:var(--green);
+  border-color:var(--green);
+  color:#061108
+}
+
+/* AR / Camera */
+.camera-stage{
+  height:100vh;
+  width:100%;
+  position:relative;
+  background:#050605;
+  overflow:hidden;
+  color:white
+}
+
+.camera-stage.meta{
+  max-width:none;
+  width:100vw;
+  margin-left:50%;
+  transform:translateX(-50%)
+}
+
+video,canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1)
+}
+
+canvas{z-index:2}
+
+.dim{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.72),transparent 25%,transparent 70%,rgba(0,0,0,.86));
+  z-index:3;
+  pointer-events:none
+}
+
+.hud{
+  position:absolute;
+  z-index:4;
+  background:rgba(14,15,17,.68);
+  border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(18px);
+  border-radius:22px;
+  padding:14px
+}
+
+.hud.top-left{
+  top:16px;
+  left:16px;
+  right:100px
+}
+
+.hud.top-right{
+  top:16px;
+  right:16px;
+  width:74px;
+  text-align:center
+}
+
+.hud.bottom{
+  left:16px;
+  right:16px;
+  bottom:80px
+}
+
+.hud.mid-right{
+  right:16px;
+  top:50%;
+  width:190px;
+  transform:translateY(-50%)
+}
+
+.hud.mid-left{
+  left:16px;
+  top:50%;
+  width:210px;
+  transform:translateY(-50%)
+}
+
+.hud strong{display:block}
+
+.repnum{
+  font-size:38px;
+  font-weight:950;
+  line-height:.9
+}
+
+.poke-chip{
+  position:absolute;
+  z-index:4;
+  right:16px;
+  bottom:150px;
+  width:70px;
+  height:70px;
+  border-radius:22px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.16);
+  display:grid;
+  place-items:center
+}
+
+.poke-chip img{
+  width:62px;
+  height:62px;
+  object-fit:contain
+}
+
+.camera-actions{
+  position:absolute;
+  z-index:5;
+  left:16px;
+  right:16px;
+  bottom:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px
+}
+
+.camera-actions .btn.primary{
+  background:white;
+  color:#050605
+}
+
+.permission{
+  position:absolute;
+  z-index:8;
+  inset:0;
+  display:grid;
+  place-items:center;
+  background:rgba(5,6,5,.92);
+  padding:24px
+}
+
+.summary-card{
+  position:absolute;
+  z-index:9;
+  left:18px;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(14,15,17,.92);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:28px;
+  padding:20px;
+  text-align:left;
+  box-shadow:var(--shadow)
+}
+
+.coach-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px
+}
+
+.chart{
+  height:190px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#111316,#0d0e10);
+  border:1px solid var(--line);
+  padding:14px;
+  position:relative;
+  overflow:hidden
+}
+
+.chart:before{
+  content:"";
+  position:absolute;
+  left:20px;
+  right:20px;
+  bottom:42px;
+  height:2px;
+  background:var(--green)
+}
+
+.bars{
+  position:absolute;
+  left:24px;
+  right:24px;
+  bottom:42px;
+  display:flex;
+  gap:10px;
+  align-items:end
+}
+
+.bar{
+  flex:1;
+  background:var(--green);
+  border-radius:8px 8px 0 0;
+  opacity:.9
+}
+
+.heat{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+  margin-top:12px
+}
+
+.day{
+  aspect-ratio:1;
+  border-radius:7px;
+  background:#1d1f22
+}
+
+.day.on{background:var(--green)}
+
+@media(min-width:820px){
+  .mobile-frame{
+    box-shadow:var(--shadow);
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line)
+  }
+
+  .camera .mobile-frame{
+    max-width:none;
+    width:100%;
+    box-shadow:none;
+    border:0
+  }
+
+  .camera-stage.meta .hud.top-left{
+    left:34px;
+    right:auto;
+    width:320px
+  }
+
+  .camera-stage.meta .hud.top-right{right:34px}
+  .camera-stage.meta .hud.mid-left{left:34px}
+  .camera-stage.meta .hud.mid-right{right:34px}
+
+  .camera-stage.meta .camera-actions{
+    left:50%;
+    right:auto;
+    width:420px;
+    transform:translateX(-50%)
+  }
+}
+
+@media(max-width:760px){
+  body{display:block}
+  .app{width:100%}
+  .mobile-frame{max-width:none}
+  .camera-stage.meta{width:100%;margin:0;transform:none}
+  .coach-grid{grid-template-columns:1fr}
+  .hud.mid-left,.hud.mid-right{display:none}
+}
+</style>
+</head>
+
+<body>
+<div class="app" id="app">
+  <div class="mobile-frame" id="frame">
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="icons">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="pill"></span>
+      </div>
+    </div>
+
+    <div id="topNav"></div>
+
+    <main id="root"></main>
+  </div>
+</div>
+
+<script type="module">
+import {PoseLandmarker,FilesetResolver,DrawingUtils} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+
+const root=document.getElementById('root');
+const app=document.getElementById('app');
+const frame=document.getElementById('frame');
+const topNav=document.getElementById('topNav');
+
+const HOLD=10;   // frames to hold a position before it counts (~0.33s at 30fps)
+const INTRO=42;  // frames for intro message before checking starts
+const TEACH_TOTAL={press:4,squat:4,raise:3,row:4};
+
+const POKE={
+  66:{id:66,name:'machop',trait:'Stubborn. Practical. Shows up.',sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/66.png'},
+  4:{id:4,name:'charmander',trait:'Restless. Builds momentum.',sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png'},
+  143:{id:143,name:'snorlax',trait:'Calm. No pressure. Still moving.',sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png'}
+};
+
+/* ── Exercise tutorials ─────────────────────────────────── */
+const TUTORIALS={
+  squat:{
+    name:'Squat Pattern',
+    icon:'🦵',
+    steps:[
+      'Stand with feet shoulder-width apart, toes angled 15–30° outward.',
+      'Brace your core — breathe in and tighten your stomach before you move.',
+      'Hinge at the hips first, then bend the knees. Think "sit back and down".',
+      'Push your knees out in the direction your toes point throughout the descent.',
+      'Lower until thighs are at least parallel to the floor. Chest stays tall.',
+      'Drive through your whole foot to stand. Squeeze your glutes at the top.'
+    ],
+    mistakes:[
+      'Knees caving inward — actively push them out over your little toe.',
+      'Heels rising — keep them flat; if they lift, raise your heels on a plate.',
+      'Chest falling forward — keep it tall, look slightly up.',
+      'Not reaching depth — use less weight and sit deeper.'
+    ],
+    tip:'Imagine sitting back onto a low chair just behind you. The bar or your arms are just along for the ride — your hips lead the movement.',
+    cues:['Chest tall','Knees out','Sit between feet','Drive through heels']
+  },
+  press:{
+    name:'Press Pattern',
+    icon:'💪',
+    steps:[
+      'Grip the bar or handles just outside shoulder width.',
+      'Position your wrists directly above your elbows before pressing — this is your power line.',
+      'Retract and depress your shoulder blades: pull them back and down.',
+      'Press the weight upward smoothly. Do not shrug your shoulders toward your ears.',
+      'Fully extend without locking hard. Keep tension in the pressing muscles.',
+      'Lower slowly and under control — aim for 2–3 seconds on the way down.'
+    ],
+    mistakes:[
+      'Shrugging shoulders up — keep them packed down throughout.',
+      'Flaring elbows too wide — keep them at roughly 45° on bench press.',
+      'Bouncing at the bottom — control the stretch, do not use momentum.',
+      'Uneven press — focus on feeling both sides equally.'
+    ],
+    tip:'Think "push yourself away from the bar" on bench. On overhead press, imagine pushing the ceiling away while keeping your ribs down.',
+    cues:['Shoulders down','Wrists over elbows','Controlled descent','No shrug']
+  },
+  raise:{
+    name:'Raise / Isolation Pattern',
+    icon:'🏋️',
+    steps:[
+      'Stand tall with a slight, soft bend in both elbows — never fully lock them.',
+      'Brace your core and squeeze your glutes before lifting. Stay still.',
+      'Raise the weight by initiating from the shoulder joint, not the wrist.',
+      'Stop at shoulder height — going higher shifts the work off the target muscle.',
+      'Pause briefly at the top to feel the contraction.',
+      'Lower slowly — 3 seconds down is where most of the benefit happens.'
+    ],
+    mistakes:[
+      'Using momentum and swinging — slow down and use less weight.',
+      'Too much weight — you should feel it in the target muscle the whole time.',
+      'Raising above shoulder height — stop right there.',
+      'Bending elbows to compensate — reduce weight and keep a soft, fixed elbow.'
+    ],
+    tip:'Lead with your elbows, not your hands. Imagine pouring water out of a jug held at arm\'s length.',
+    cues:['Soft elbows','Stop at shoulder height','Slow lower','No swing']
+  },
+  row:{
+    name:'Row / Pull Pattern',
+    icon:'🔙',
+    steps:[
+      'Hinge at the hips until your torso is near parallel — keep a neutral spine, not rounded.',
+      'Let your arms hang straight before initiating the pull.',
+      'Lead with your elbows, not your hands — pull them back past your torso.',
+      'Squeeze your shoulder blades together hard at the top of each rep.',
+      'Keep your torso angle consistent — do not rise with the pull.',
+      'Lower with control, resisting the weight all the way back down.'
+    ],
+    mistakes:[
+      'Rounding the lower back — hinge with a flat, neutral spine.',
+      'Using too much bicep — the elbow should lead, bicep is secondary.',
+      'Torso rising with the pull — stay locked in your hinge angle.',
+      'Not squeezing at the top — that contraction is the muscle working.'
+    ],
+    tip:'Imagine you are trying to crack a walnut between your shoulder blades at the top of each rep. That squeeze is the goal.',
+    cues:['Flat back','Elbows back','Squeeze blades','Stay hinged']
+  }
+};
+
+const BASE_EX=[
+  {id:'squat',name:'Bodyweight Squat',target:'Legs',sets:2,reps:8,weight:0,rest:75,cue:'Sit between your knees. Chest tall. Reach depth.',type:'squat',prev:'—'},
+  {id:'press',name:'Shoulder Press',target:'Shoulders',sets:3,reps:8,weight:20,rest:90,cue:'Wrists above elbows. Press without shrugging.',type:'press',prev:'20 × 8'},
+  {id:'raise',name:'Lateral Raise',target:'Shoulders',sets:2,reps:10,weight:8,rest:60,cue:'Stop around shoulder height. Do not shrug.',type:'raise',prev:'8 × 10'},
+  {id:'chest',name:'Chest Press',target:'Chest',sets:3,reps:10,weight:35,rest:90,cue:'Handles at mid-chest. Smooth press. Shoulders down.',type:'press',prev:'30 × 10'},
+  {id:'row',name:'Barbell Row',target:'Back',sets:3,reps:8,weight:45,rest:90,cue:'Hinge. Pull elbows back. Torso stays stable.',type:'row',prev:'—'},
+  {id:'lat',name:'Lat Pulldown',target:'Back',sets:3,reps:10,weight:35,rest:90,cue:'Pull elbows down. Keep ribs quiet.',type:'row',prev:'35 × 10'},
+  {id:'legpress',name:'Leg Press',target:'Legs',sets:3,reps:10,weight:70,rest:90,cue:'Lower slow. Knees track over toes.',type:'squat',prev:'70 × 10'},
+  {id:'curl',name:'Dumbbell Curl',target:'Arms',sets:2,reps:12,weight:10,rest:60,cue:'No swing. Elbows stay quiet.',type:'raise',prev:'10 × 12'},
+  {id:'tricep',name:'Rope Pushdown',target:'Arms',sets:2,reps:12,weight:20,rest:60,cue:'Elbows pinned. Finish with control.',type:'press',prev:'20 × 12'},
+  {id:'plank',name:'Plank',target:'Core',sets:2,reps:30,weight:0,rest:60,cue:'Ribs down. Breathe. Do not sag.',type:'squat',prev:'30 sec'}
+];
+
+const ex=id=>structuredClone(BASE_EX.find(e=>e.id===id));
+
+const PRESETS=[
+  {id:'full',name:'Full Body Beginner',label:'Starter',desc:'Five simple movements. Built for a complete beginner walking in today.',days:'Day 1',exercises:['squat','press','raise','chest','row'].map(ex)},
+  {id:'push',name:'Push Day A',label:'Push',desc:'Chest, shoulders, and triceps with AR support on presses and raises.',days:'PPL',exercises:['press','chest','raise','tricep'].map(ex)},
+  {id:'pull',name:'Pull Day A',label:'Pull',desc:'Back and biceps. Beginner-safe pulling with simple cues.',days:'PPL',exercises:['lat','row','curl'].map(ex)},
+  {id:'legs',name:'Leg Day A',label:'Legs',desc:'Stable lower-body work. Squat pattern, leg press, and core.',days:'PPL',exercises:['squat','legpress','plank'].map(ex)}
+];
+
+let state={
+  screen:'onboarding',
+  question:'',
+  poke:66,
+  modal:null,
+  learnExId:null,
+  pendingWorkoutId:null,
+  selectedWorkoutId:'full',
+  workouts:structuredClone(PRESETS),
+  history:[
+    {name:'Full Body Primer',date:'Yesterday',sets:6,mode:'Manual log'},
+    {name:'Machine Confidence',date:'Last week',sets:8,mode:'Phone AR'}
+  ],
+  activeWorkout:null,
+  exIndex:0,
+  setIndex:0,
+  setDone:{},
+  mode:'phone',
+  stream:null,
+  detector:null,
+  anim:null,
+  lastVideo:-1,
+  repPhase:'down',
+  repCount:0,
+  totalARReps:0,
+  cue:'Start camera. Keep your body visible.',
+  status:'Waiting for camera',
+  exerciseSummary:null,
+  finished:false,
+  filter:'All',
+  learnFilter:'All',
+  search:'',
+  teachPhase:0,
+  teachStepFrames:0,
+  teachComplete:false,
+  teachMissFrames:0,  // consecutive "bad" frames while mid-hold (for hysteresis)
+  teachTextLock:0     // frames remaining before correction text can change
+};
+
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const poke=()=>POKE[state.poke];
+const currentWorkout=()=>state.workouts.find(w=>w.id===state.selectedWorkoutId)||state.workouts[0];
+
+function resetShell(){
+  app.className='app';
+  frame.className='mobile-frame';
+}
+
+function setNav(active){
+  if(state.screen==='ar'){
+    topNav.style.display='none';
+    topNav.innerHTML='';
+    return;
+  }
+
+  if(['onboarding','match','strategy'].includes(state.screen)){
+    topNav.style.display='none';
+    topNav.innerHTML='';
+    return;
+  }
+
+  topNav.style.display='block';
+  topNav.innerHTML=`
+    <nav class="top-nav">
+      <button class="nav ${active==='home'?'active':''}" onclick="go('home')">
+        <b>⌂</b><span>Home</span>
+      </button>
+      <button class="nav ${active==='workouts'?'active':''}" onclick="go('workouts')">
+        <b>▦</b><span>Workouts</span>
+      </button>
+      <button class="nav ${active==='learn'?'active':''}" onclick="go('learn')">
+        <b>📖</b><span>Learn</span>
+      </button>
+      <button class="nav ${active==='coach'?'active':''}" onclick="go('coach')">
+        <b>↗</b><span>Coach</span>
+      </button>
+    </nav>
+  `;
+}
+
+function openCoachMode(workoutId){
+  state.pendingWorkoutId=workoutId||state.selectedWorkoutId;
+  state.modal='coachMode';
+  render();
+}
+
+function openModal(type){
+  state.modal=type;
+  render();
+}
+
+function closeModal(){
+  state.modal=null;
+  state.pendingWorkoutId=null;
+  state.learnExId=null;
+  render();
+}
+
+window.openCoachMode=openCoachMode;
+window.openModal=openModal;
+window.closeModal=closeModal;
+
+window.go=s=>{
+  if(state.screen==='ar'&&s!=='ar')stopCamera();
+  state.modal=null;
+  state.screen=s;
+  render();
+};
+
+window.openLearn=id=>{
+  state.learnExId=id;
+  state.modal='learn';
+  render();
+};
+
+/* ── Screens ─────────────────────────────────────────────── */
+
+function onboarding(){
+  resetShell();
+  root.innerHTML=`
+    <section class="screen">
+      <div class="eyebrow">Beginner setup</div>
+      <h1>Let's get you through your first real gym session.</h1>
+      <p class="lead">Nudge starts with what feels scary, then builds the workout, companion, and AR coaching around that.</p>
+
+      <div class="stack" style="margin-top:28px">
+        ${[
+          ['lost',"I don't know what to do",'Give me one clear full-body workout.'],
+          ['machines','Machines feel intimidating','Explain setup and form while I train.'],
+          ['consistency','I need to keep showing up','Give me a companion and simple progress.']
+        ].map(([k,t,d])=>`
+          <button class="goal ${state.question===k?'selected':''}" onclick="selectQ('${k}')">
+            <div>
+              <h3>${t}</h3>
+              <p class="tiny" style="margin-top:5px">${d}</p>
+            </div>
+            <div class="ico">${k==='lost'?'?':k==='machines'?'◇':'↟'}</div>
+          </button>
+        `).join('')}
+      </div>
+
+      ${state.question?`
+        <div class="sticky-cta">
+          <button class="btn primary" onclick="go('match')">Match my companion</button>
+        </div>
+      `:''}
+    </section>
+  `;
+}
+
+window.selectQ=k=>{
+  state.question=k;
+  state.poke=k==='consistency'?143:k==='machines'?66:4;
+  render();
+};
+
+function match(){
+  resetShell();
+  let p=poke();
+  root.innerHTML=`
+    <section class="screen">
+      <button class="btn ghost small" onclick="go('onboarding')">← Back</button>
+
+      <div class="stage" style="margin-top:18px">
+        <img src="${p.sprite}">
+        <div class="name">${p.name}</div>
+        <p>${p.trait}</p>
+      </div>
+
+      <p class="lead">${cap(p.name)} is not a collectible hidden in a tab. It watches your workout, gives one form correction at a time, and grows from real progress.</p>
+
+      <div class="swap">
+        ${Object.values(POKE).map(x=>`
+          <button class="${x.id===state.poke?'active':''}" onclick="choosePoke(${x.id})">
+            <img src="${x.sprite}">
+            <span>${x.name}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="sticky-cta">
+        <button class="btn primary" onclick="go('home')">Enter Nudge</button>
+      </div>
+    </section>
+  `;
+}
+
+window.choosePoke=id=>{
+  state.poke=id;
+  render();
+};
+
+function home(){
+  resetShell();
+  let p=poke();
+  let w=currentWorkout();
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="top">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Home</div>
+          <h2>Today is already planned.</h2>
+        </div>
+        <button class="btn ghost small" onclick="go('strategy')">Strategy</button>
+      </div>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="badge green">Level 4 · 720 XP</span>
+          <h2 style="margin-top:14px">${cap(p.name)} is training with you.</h2>
+          <p>Next level unlocks after one complete AR-assisted workout.</p>
+          <div class="xpbar"><span></span></div>
+        </div>
+        <img class="pokemon" src="${p.sprite}">
+      </div>
+
+      <div class="metric-row">
+        <div class="metric"><strong>72%</strong><span>to lvl 5</span></div>
+        <div class="metric"><strong>${state.workouts.length}</strong><span>saved plans</span></div>
+        <div class="metric"><strong>${state.totalARReps}</strong><span>AR reps</span></div>
+      </div>
+
+      <div class="card routine" style="margin-top:16px">
+        <div class="top" style="margin-bottom:12px">
+          <div>
+            <span class="badge amber">${w.label||'Today'}</span>
+            <h2 style="font-size:28px;margin-top:10px">${w.name}</h2>
+            <p class="lead" style="margin-top:7px">${w.desc}</p>
+          </div>
+          <span class="badge green">${w.exercises.length} moves</span>
+        </div>
+
+        <div style="display:grid;gap:8px;margin-top:14px">
+          ${w.exercises.slice(0,5).map((e,i)=>`
+            <div class="row" style="padding:11px 0">
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <span class="badge" style="min-width:34px;justify-content:center">${i+1}</span>
+                <div>
+                  <strong style="font-size:15px;font-weight:900">${e.name}</strong>
+                  <p class="tiny" style="margin-top:3px">${e.target} · ${e.cue}</p>
+                </div>
+              </div>
+              <button class="btn learn-btn" onclick="openLearn('${e.id}')">Learn</button>
+            </div>
+          `).join('')}
+        </div>
+
+        <button class="btn primary" style="width:100%;margin-top:16px" onclick="openCoachMode('${w.id}')">Start today's workout</button>
+        <button class="btn ghost" style="width:100%;margin-top:10px" onclick="go('workouts')">Change workout</button>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3>New to the gym?</h3>
+          <span class="badge blue">Guides</span>
+        </div>
+        <p class="tiny">Step-by-step instructions, common mistakes, and coaching tips for every movement pattern.</p>
+        <button class="btn secondary" style="width:100%;margin-top:12px" onclick="go('learn')">Open exercise guides</button>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Quick actions</h3>
+        <p class="tiny" style="margin-top:5px">Manage plans, review history, or import past workouts.</p>
+        <div class="actions">
+          <button class="btn secondary" onclick="go('workouts')">Manage workouts</button>
+          <button class="btn secondary" onclick="go('coach')">View history</button>
+        </div>
+      </div>
+
+      ${state.modal?modal():''}
+    </section>
+  `;
+}
+
+function workouts(){
+  resetShell();
+  let selected=currentWorkout();
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="top">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">My workouts</div>
+          <h2>Saved routines.</h2>
+          <p class="tiny" style="margin-top:6px">Tabs swap the routine below.</p>
+        </div>
+        <button class="btn primary small" onclick="openModal('add')">Add exercise</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn secondary" onclick="openModal('create')">Create custom</button>
+        <button class="btn secondary" onclick="document.getElementById('csv').click()">Import CSV</button>
+        <input id="csv" type="file" accept=".csv" style="display:none" onchange="importCSV(event)">
+      </div>
+
+      <div class="tabs" style="overflow-x:auto;padding-bottom:2px">
+        ${state.workouts.map(w=>`
+          <button class="tab ${state.selectedWorkoutId===w.id?'active':''}" onclick="selectWorkout('${w.id}')">${w.label||w.name}</button>
+        `).join('')}
+        <button class="tab" onclick="openModal('create')">＋</button>
+      </div>
+
+      <div class="card routine">
+        <div class="top" style="margin-bottom:10px">
+          <div>
+            <span class="badge green">${selected.label||'Saved'}</span>
+            <h3 style="font-size:23px;margin-top:10px">${selected.name}</h3>
+            <p class="tiny" style="margin-top:5px">${selected.desc}</p>
+          </div>
+          <button class="btn ghost small" onclick="openCoachMode('${selected.id}')">Start</button>
+        </div>
+
+        ${selected.exercises.map((e,i)=>`
+          <div class="row">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <span class="badge" style="min-width:34px;justify-content:center">${i+1}</span>
+              <div>
+                <strong>${e.name}</strong>
+                <p class="tiny">${e.target} · ${e.cue}</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn learn-btn" onclick="openLearn('${e.id}')">Learn</button>
+              <button class="btn ghost small" onclick="startExercise('${selected.id}','${e.id}')">Start</button>
+            </div>
+          </div>
+        `).join('')}
+
+        <div class="actions">
+          <button class="btn secondary" onclick="openModal('add')">Add exercise</button>
+          <button class="btn primary" onclick="openCoachMode('${selected.id}')">Start workout</button>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Add more workouts</h3>
+        <p class="tiny" style="margin-top:5px">Create a custom routine or import a CSV.</p>
+        <div class="actions">
+          <button class="btn ghost" onclick="openModal('create')">New workout</button>
+          <button class="btn ghost" onclick="document.getElementById('csv').click()">Import CSV</button>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Exercise library</h3>
+        <p class="tiny" style="margin-top:5px">Search, filter, and browse all beginner-safe exercises.</p>
+        <button class="btn ghost" style="width:100%;margin-top:12px" onclick="openModal('add')">Open library</button>
+      </div>
+
+      ${state.modal?modal():''}
+    </section>
+  `;
+}
+
+/* ── Learn screen ─────────────────────────────────────────── */
+function learn(){
+  resetShell();
+
+  const groups={
+    Legs:BASE_EX.filter(e=>e.target==='Legs'||(state.learnFilter!=='All'&&e.target===state.learnFilter)),
+    Shoulders:BASE_EX.filter(e=>e.target==='Shoulders'),
+    Chest:BASE_EX.filter(e=>e.target==='Chest'),
+    Back:BASE_EX.filter(e=>e.target==='Back'),
+    Arms:BASE_EX.filter(e=>e.target==='Arms'),
+    Core:BASE_EX.filter(e=>e.target==='Core')
+  };
+
+  const filtered=state.learnFilter==='All'
+    ?BASE_EX
+    :BASE_EX.filter(e=>e.target===state.learnFilter);
+
+  const byGroup={};
+  filtered.forEach(e=>{
+    if(!byGroup[e.target])byGroup[e.target]=[];
+    byGroup[e.target].push(e);
+  });
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="top">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Exercise guides</div>
+          <h2>Learn how to train.</h2>
+          <p class="tiny" style="margin-top:6px">Step-by-step form, common mistakes, and coaching tips for every exercise.</p>
+        </div>
+      </div>
+
+      <!-- Pattern cards -->
+      <div style="display:grid;gap:10px;margin-bottom:20px">
+        ${Object.entries(TUTORIALS).map(([type,t])=>`
+          <div class="learn-card">
+            <div class="learn-header">
+              <div style="display:flex;gap:10px;align-items:center">
+                <span style="font-size:22px">${t.icon}</span>
+                <div>
+                  <strong style="font-size:15px;font-weight:900">${t.name}</strong>
+                  <p class="tiny" style="margin-top:2px">${t.steps.length} steps · ${t.mistakes.length} mistakes to avoid</p>
+                </div>
+              </div>
+              <button class="btn learn-btn" onclick="openLearnType('${type}')">Guide</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${t.cues.map(c=>`<span class="cue-pill">${c}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Filter by muscle -->
+      <div class="chiprow" style="margin-bottom:14px">
+        ${['All','Shoulders','Chest','Legs','Back','Arms','Core'].map(f=>`
+          <button class="chip ${state.learnFilter===f?'active':''}" onclick="setLearnFilter('${f}')">${f}</button>
+        `).join('')}
+      </div>
+
+      <!-- Exercise list -->
+      ${Object.entries(byGroup).map(([group,exs])=>`
+        <div class="muscle-section">
+          <div class="muscle-label">${group}</div>
+          ${exs.map(e=>`
+            <div class="ex-card">
+              <div>
+                <strong style="font-size:14px;font-weight:900">${e.name}</strong>
+                <p class="tiny" style="margin-top:3px">${e.cue}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+                  ${(TUTORIALS[e.type]?.cues||[]).map(c=>`<span class="cue-pill">${c}</span>`).join('')}
+                </div>
+              </div>
+              <button class="btn learn-btn" style="flex-shrink:0" onclick="openLearn('${e.id}')">Learn</button>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </section>
+
+    ${state.modal?modal():''}
+  `;
+}
+
+window.setLearnFilter=f=>{
+  state.learnFilter=f;
+  render();
+};
+
+window.openLearnType=type=>{
+  state.learnExId='__type__'+type;
+  state.modal='learn';
+  render();
+};
+
+/* ── Modal ───────────────────────────────────────────────── */
+function modal(){
+  let list=BASE_EX.filter(e=>
+    (state.filter==='All'||e.target===state.filter)&&
+    e.name.toLowerCase().includes(state.search.toLowerCase())
+  );
+
+  if(state.modal==='learn'){
+    let tut,exName,exCue;
+
+    if(state.learnExId&&state.learnExId.startsWith('__type__')){
+      let type=state.learnExId.replace('__type__','');
+      tut=TUTORIALS[type];
+      exName=tut.name;
+      exCue='Movement pattern guide';
+    }else{
+      let e=BASE_EX.find(x=>x.id===state.learnExId);
+      tut=TUTORIALS[e?.type||'squat'];
+      exName=e?.name||'Exercise';
+      exCue=e?.cue||'';
+    }
+
+    return `
+      <div class="modal" onclick="if(event.target===this)closeModal()">
+        <div class="sheet">
+          <div class="top" style="margin-bottom:14px">
+            <div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+                <span style="font-size:20px">${tut.icon}</span>
+                <span class="badge blue">${tut.name}</span>
+              </div>
+              <h2 style="font-size:22px">${exName}</h2>
+              <p class="tiny" style="margin-top:4px">${exCue}</p>
+            </div>
+            <button class="btn ghost small" onclick="closeModal()">✕</button>
+          </div>
+
+          <!-- Quick cues -->
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+            ${tut.cues.map(c=>`<span class="cue-pill">${c}</span>`).join('')}
+          </div>
+
+          <!-- Steps -->
+          <div class="eyebrow">Step by step</div>
+          <div>
+            ${tut.steps.map((s,i)=>`
+              <div class="tutorial-step">
+                <div class="step-num">${i+1}</div>
+                <p style="color:var(--text);font-size:13px;line-height:1.55;margin:0">${s}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Mistakes -->
+          <div class="eyebrow" style="margin-top:18px">Common mistakes</div>
+          <div>
+            ${tut.mistakes.map(m=>`
+              <div class="mistake-row">
+                <span class="badge red" style="flex-shrink:0;font-size:14px">✗</span>
+                <p style="color:#ff9e8f;font-size:12px;line-height:1.5;margin:0">${m}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Coach tip -->
+          <div class="tip-card">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="font-size:16px;flex-shrink:0">💡</span>
+              <p style="color:#9eefb6;font-size:13px;line-height:1.55;margin:0"><strong style="color:#c6f5d4">Coach tip: </strong>${tut.tip}</p>
+            </div>
+          </div>
+
+          <button class="btn primary" style="margin-top:18px" onclick="closeModal()">Got it</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if(state.modal==='coachMode'){
+    let w=state.workouts.find(x=>x.id===state.pendingWorkoutId)||currentWorkout();
+    return `
+      <div class="modal" onclick="if(event.target===this)closeModal()">
+        <div class="sheet">
+          <div class="top">
+            <div>
+              <h2>Choose coaching mode</h2>
+              <p class="tiny" style="margin-top:6px">${w.name} · You can switch modes during the workout.</p>
+            </div>
+            <button class="btn ghost small" onclick="closeModal()">✕</button>
+          </div>
+
+          <button class="mode-option" onclick="startWorkout('${w.id}','log')">
+            <div><strong>Guided log</strong><span>Manual set logging with beginner cues, rest timer, and summaries.</span></div>
+            <b>→</b>
+          </button>
+          <button class="mode-option" onclick="startWorkout('${w.id}','phone')">
+            <div><strong>Phone camera</strong><span>Use your phone for rep counting and form feedback while you train.</span></div>
+            <b>→</b>
+          </button>
+          <button class="mode-option" onclick="startWorkout('${w.id}','meta')">
+            <div><strong>Meta glasses</strong><span>Hands-free coaching. Sets log automatically without touching your phone.</span></div>
+            <b>→</b>
+          </button>
+
+          <p class="tiny" style="margin-top:14px">Recommendation for first-timers: start with Guided log, then switch to camera when form feels uncertain.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  if(state.modal==='create'){
+    return `
+      <div class="modal" onclick="if(event.target===this)closeModal()">
+        <div class="sheet">
+          <div class="top">
+            <h2>Create workout</h2>
+            <button class="btn ghost small" onclick="closeModal()">✕</button>
+          </div>
+          <p class="lead">Create a new saved workout from the beginner-safe exercise library.</p>
+          <input class="search" id="customName" placeholder="Workout name" value="Custom Full Body">
+          <div class="chiprow">
+            <button class="chip active">Beginner</button>
+            <button class="chip">Machine first</button>
+            <button class="chip">AR enabled</button>
+          </div>
+          <button class="btn primary" style="margin-top:18px" onclick="saveCustomWorkout()">Save custom workout</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="modal" onclick="if(event.target===this)closeModal()">
+      <div class="sheet">
+        <div class="top">
+          <h2>Add exercise</h2>
+          <button class="btn ghost small" onclick="closeModal()">✕</button>
+        </div>
+        <input class="search" placeholder="Search exercises" value="${state.search}" oninput="setSearch(this.value)">
+        <div class="chiprow">
+          ${['All','Shoulders','Chest','Legs','Back','Arms','Core'].map(f=>`
+            <button class="chip ${state.filter===f?'active':''}" onclick="setFilter('${f}')">${f}</button>
+          `).join('')}
+        </div>
+        ${list.map(e=>`
+          <div class="row">
+            <div>
+              <strong>${e.name}</strong>
+              <p class="tiny">${e.target} · ${e.cue}</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn learn-btn" onclick="openLearn('${e.id}')">Learn</button>
+              <button class="btn primary small" onclick="addExercise('${e.id}')">Add</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+window.setSearch=v=>{state.search=v;render();};
+window.setFilter=f=>{state.filter=f;render();};
+window.selectWorkout=id=>{state.selectedWorkoutId=id;render();};
+
+window.addExercise=id=>{
+  let e=BASE_EX.find(x=>x.id===id);
+  currentWorkout().exercises.push(structuredClone(e));
+  state.modal=null;
+  render();
+};
+
+window.saveCustomWorkout=()=>{
+  let name=document.getElementById('customName')?.value||'Custom Workout';
+  let id='custom-'+Date.now();
+  state.workouts.push({id,name,label:'Custom',desc:'Your saved custom beginner routine.',days:'Custom',exercises:['squat','chest','row'].map(ex)});
+  state.selectedWorkoutId=id;
+  state.modal=null;
+  render();
+};
+
+window.importCSV=e=>{
+  let f=e.target.files[0];
+  if(!f)return;
+  let r=new FileReader();
+  r.onload=()=>{
+    state.history.unshift({name:'Imported Hevy / EpicGains CSV',date:'Today',sets:12,mode:'CSV import'});
+    alert('CSV imported into workout history prototype.');
+    render();
+  };
+  r.readAsText(f);
+};
+
+function startExercise(workoutId,exId){
+  state.selectedWorkoutId=workoutId;
+  let w=currentWorkout();
+  let idx=w.exercises.findIndex(e=>e.id===exId);
+  initWorkout(workoutId);
+  state.exIndex=Math.max(0,idx);
+  state.screen='log';
+  render();
+}
+
+window.startExercise=startExercise;
+
+function initWorkout(workoutId=state.selectedWorkoutId){
+  state.selectedWorkoutId=workoutId;
+  state.activeWorkout=structuredClone(currentWorkout());
+  state.exIndex=0;
+  state.setIndex=0;
+  state.repCount=0;
+  state.repPhase='down';
+  state.exerciseSummary=null;
+  state.finished=false;
+  state.status='Ready';
+  state.cue='Start camera once. Nudge will keep it running across exercises.';
+  state.teachPhase=0;state.teachStepFrames=0;state.teachComplete=false;state.teachMissFrames=0;state.teachTextLock=0;
+}
+
+window.startWorkout=(workoutId,mode='log')=>{
+  state.modal=null;
+  state.pendingWorkoutId=null;
+  initWorkout(workoutId);
+  if(mode==='log'){state.screen='log';}
+  else{state.mode=mode;state.screen='ar';}
+  render();
+};
+
+window.startManual=()=>{initWorkout();state.screen='log';render();};
+
+window.startAR=mode=>{
+  if(!state.activeWorkout)initWorkout(state.selectedWorkoutId);
+  state.mode=mode;
+  state.screen='ar';
+  state.exerciseSummary=null;
+  state.repCount=0;
+  state.repPhase='down';
+  state.status='Ready';
+  state.cue='Start camera once. Nudge will keep it running across exercises.';
+  render();
+};
+
+/* ── Log screen ──────────────────────────────────────────── */
+function log(){
+  resetShell();
+  let w=state.activeWorkout||state.workouts[0];
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="top">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Workout log</div>
+          <h2>${w.name}</h2>
+        </div>
+        <button class="btn ghost small" onclick="finishWorkout()">Finish</button>
+      </div>
+
+      <div class="card pad">
+        <p>Guided log is active. Switch to camera when form feels uncertain.</p>
+        <div class="actions">
+          <button class="btn secondary" onclick="startAR('phone')">Coach my form</button>
+          <button class="btn primary" onclick="startAR('meta')">Train hands-free</button>
+        </div>
+      </div>
+
+      ${w.exercises.map((e,i)=>`
+        <div class="card routine" style="margin-top:12px">
+          <div class="top" style="margin-bottom:8px">
+            <div>
+              <h3>${e.name}</h3>
+              <p class="tiny">${e.cue}</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn learn-btn" onclick="openLearn('${e.id}')">Learn</button>
+              <button class="btn ghost small" onclick="jumpAR(${i})">AR</button>
+            </div>
+          </div>
+
+          <!-- Quick cues bar -->
+          <div class="form-cue-bar">
+            <div class="icon">🎯</div>
+            <div>
+              <p style="font-size:11px;font-weight:900;color:#ffd08b;margin:0 0 5px">Form reminders</p>
+              <div style="display:flex;flex-wrap:wrap;gap:5px">
+                ${(TUTORIALS[e.type]?.cues||[]).map(c=>`<span class="cue-pill" style="font-size:11px;padding:5px 9px">${c}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="set-table">
+            <div class="set-row head">
+              <div>Set</div><div>Prev</div><div>lb</div><div>Reps</div><div>✓</div>
+            </div>
+            ${Array.from({length:e.sets}).map((_,s)=>{
+              let key=e.id+'-'+s;
+              let done=state.setDone[key];
+              return `
+                <div class="set-row ${done?'done':''}">
+                  <div><strong>${s+1}</strong></div>
+                  <div>${e.prev}</div>
+                  <input class="set-input" value="${e.weight}">
+                  <input class="set-input" value="${e.reps}">
+                  <button class="check ${done?'done':''}" onclick="toggleSet('${key}')">${done?'✓':'+'}</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('')}
+
+      <button class="btn primary" style="margin-top:16px" onclick="finishWorkout()">Finish workout</button>
+
+      ${state.modal?modal():''}
+    </section>
+  `;
+}
+
+window.toggleSet=k=>{state.setDone[k]=!state.setDone[k];render();};
+window.jumpAR=i=>{state.exIndex=i;state.setIndex=0;state.repCount=0;window.startAR('phone');};
+
+/* ── AR screen ───────────────────────────────────────────── */
+function ar(){
+  app.className='app camera';
+  frame.className='mobile-frame';
+
+  let e=state.activeWorkout.exercises[state.exIndex];
+  let p=poke();
+  let tut=TUTORIALS[e.type]||TUTORIALS.press;
+
+  root.innerHTML=`
+    <section class="camera-stage ${state.mode==='meta'?'meta':''}">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="dim"></div>
+
+      <div class="hud top-left">
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <span class="badge ${state.teachComplete?'green':'amber'}">${state.teachComplete?'Counting reps':'Form Coach'}</span>
+          <span class="badge">${state.mode==='meta'?'Meta':'Phone AR'}</span>
+        </div>
+        <h3 style="margin-top:8px">${e.name}</h3>
+        <p class="tiny" style="margin-top:3px">Set ${state.setIndex+1} of ${e.sets}</p>
+        ${!state.teachComplete?`
+        <p class="tiny" style="margin-top:6px;color:rgba(255,200,100,.9);font-weight:700">
+          Step ${state.teachPhase||'—'} of ${TEACH_TOTAL[e.type]||4} — follow the coach instructions below
+        </p>`:`
+        <p class="tiny" style="margin-top:6px">${e.cue}</p>`}
+      </div>
+
+      <div class="hud top-right">
+        <div class="repnum" id="rep">${state.teachComplete?state.repCount:(state.teachPhase||'→')}</div>
+        <p class="tiny" id="rep-label">${state.teachComplete?'/'+e.reps:'steps'}</p>
+      </div>
+
+      <div class="poke-chip"><img src="${p.sprite}"></div>
+
+      <div class="hud ${state.mode==='meta'?'mid-left':'bottom'}">
+        <strong id="status">${state.status}</strong>
+        <p class="tiny" id="cue" style="margin-top:5px">${state.cue}</p>
+      </div>
+
+      ${state.mode==='meta'?`
+        <div class="hud mid-right">
+          <strong>Hands-free log</strong>
+          <p class="tiny">Sets, reps, and summaries continue without touching the phone.</p>
+        </div>
+      `:''}
+
+      <div class="camera-actions">
+        <button class="btn ghost" onclick="backToLog()">Back</button>
+        <button class="btn primary" onclick="manualCompleteSet()">Mark set complete</button>
+      </div>
+
+      ${!state.stream?permission():''}
+      ${state.exerciseSummary?exerciseSummary():''}
+    </section>
+  `;
+
+  if(state.stream)attachExistingStream();
+}
+
+function permission(){
+  return `
+    <div class="permission" id="perm">
+      <div class="sheet" style="text-align:center">
+        <h2>Start camera once.</h2>
+        <p class="lead">After permission, Nudge keeps the camera running as exercises switch. No repeated start-camera prompts.</p>
+        <button class="btn primary" style="margin-top:18px" onclick="startCamera()">Start camera</button>
+        <button class="btn ghost" style="width:100%;margin-top:10px" onclick="backToLog()">Use normal log</button>
+      </div>
+    </div>
+  `;
+}
+
+function exerciseSummary(){
+  let e=state.activeWorkout.exercises[state.exIndex];
+  return `
+    <div class="summary-card">
+      <span class="badge green">Exercise summary</span>
+      <h2 style="margin-top:12px">${e.name} done</h2>
+      <p class="lead">${cap(poke().name)} logged ${e.sets} sets and ${e.sets*e.reps} target reps. Main cue: ${e.cue}</p>
+      <button class="btn primary" style="margin-top:18px" onclick="nextExercise()">${state.exIndex<state.activeWorkout.exercises.length-1?'Next exercise':'Finish workout'}</button>
+    </div>
+  `;
+}
+
+window.backToLog=()=>{stopCamera();state.screen='log';render();};
+window.manualCompleteSet=()=>completeSet();
+
+window.nextExercise=()=>{
+  state.exerciseSummary=null;
+  if(state.exIndex<state.activeWorkout.exercises.length-1){
+    state.exIndex++;
+    state.setIndex=0;
+    state.repCount=0;
+    state.repPhase='down';
+    state.status='Ready';
+    state.cue='Camera stays on. Start the next exercise when ready.';
+    state.teachPhase=0;state.teachStepFrames=0;state.teachComplete=false;state.teachMissFrames=0;state.teachTextLock=0;
+    state.screen='ar';
+    render();
+  }else{
+    finishWorkout();
+  }
+};
+
+function completeSet(){
+  let e=state.activeWorkout.exercises[state.exIndex];
+  state.setDone[e.id+'-'+state.setIndex]=true;
+  state.totalARReps+=Math.max(state.repCount,e.reps);
+  if(state.setIndex<e.sets-1){
+    state.setIndex++;
+    state.repCount=0;
+    state.repPhase='down';
+    state.status='Set logged';
+    state.cue='Next set. Same movement, cleaner.';
+    updateHud();
+  }else{
+    state.exerciseSummary=true;
+    render();
+  }
+}
+
+async function startCamera(){
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      state.status='Camera unavailable';
+      state.cue='Your browser does not support camera access here. Use Chrome/Safari with HTTPS.';
+      updateHud();
+      return;
+    }
+
+    if(!state.stream){
+      state.stream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},
+        audio:false
+      });
+    }
+
+    if(!state.detector){
+      let vision=await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+      );
+      state.detector=await PoseLandmarker.createFromOptions(vision,{
+        baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'},
+        runningMode:'VIDEO',
+        numPoses:1
+      });
+    }
+
+    const perm=document.querySelector('.permission');
+    if(perm)perm.remove();
+    attachExistingStream();
+  }catch(err){
+    console.error(err);
+    state.status='Camera blocked';
+    state.cue='Allow camera access in the browser, then reload.';
+    updateHud();
+  }
+}
+
+function attachExistingStream(){
+  const v=document.getElementById('video');
+  const c=document.getElementById('canvas');
+  if(!v||!c||!state.stream)return;
+  v.srcObject=state.stream;
+  v.onloadedmetadata=()=>{c.width=v.videoWidth||1280;c.height=v.videoHeight||720;v.play();loop();};
+  if(v.readyState>=2){c.width=v.videoWidth||1280;c.height=v.videoHeight||720;loop();}
+}
+
+function stopCamera(){
+  if(state.anim){cancelAnimationFrame(state.anim);state.anim=null;}
+  if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null;}
+  state.lastVideo=-1;
+}
+
+function loop(){
+  let v=document.getElementById('video');
+  let c=document.getElementById('canvas');
+  if(!v||!c||!state.detector||!state.stream)return;
+  let ctx=c.getContext('2d');
+  let du=new DrawingUtils(ctx);
+
+  function pred(){
+    if(!v||!c||!state.stream)return;
+    if(v.readyState>=2&&v.currentTime!==state.lastVideo){
+      state.lastVideo=v.currentTime;
+      c.width=v.videoWidth||1280;
+      c.height=v.videoHeight||720;
+      let res=state.detector.detectForVideo(v,performance.now());
+      ctx.clearRect(0,0,c.width,c.height);
+      if(res.landmarks&&res.landmarks[0]){
+        du.drawConnectors(res.landmarks[0],PoseLandmarker.POSE_CONNECTIONS,{color:'rgba(101,199,131,.85)',lineWidth:4});
+        du.drawLandmarks(res.landmarks[0],{color:'#fff',radius:4});
+        analyze(res.landmarks[0]);
+        if(!state.teachComplete&&state.teachPhase>0) drawTeachOverlay(ctx,res.landmarks[0],c.width,c.height);
+      }else{
+        state.status='Step into frame';
+        state.cue='Keep the movement visible.';
+        updateHud();
+      }
+    }
+    state.anim=requestAnimationFrame(pred);
+  }
+  pred();
+}
+
+function analyze(lm){
+  let e=state.activeWorkout.exercises[state.exIndex];
+  let L={sh:lm[11],el:lm[13],wr:lm[15],hip:lm[23],kn:lm[25],ank:lm[27]};
+  let R={sh:lm[12],el:lm[14],wr:lm[16],hip:lm[24],kn:lm[26],ank:lm[28]};
+
+  let visible=[L.sh,R.sh,L.el,R.el,L.wr,R.wr].every(x=>x&&x.visibility>.35);
+  if(!visible){state.status='Move back';state.cue='I need to see your shoulders, elbows, and wrists.';updateHud();return;}
+
+  // Teaching mode: runs once per exercise until all steps pass, then rep counting takes over
+  if(!state.teachComplete){
+    teachExercise(e,L,R,lm);
+    return;
+  }
+
+  // ── Normal rep counting (original logic) ──────────────────
+  let rep=false,stat='Good path',cue='Move smoothly.';
+
+  if(e.type==='press'){
+    let wy=(L.wr.y+R.wr.y)/2,sy=(L.sh.y+R.sh.y)/2;
+    let ang=(angle(L.sh,L.el,L.wr)+angle(R.sh,R.el,R.wr))/2;
+    if(state.repPhase==='down'&&wy<sy-.08&&ang>140)state.repPhase='up';
+    if(state.repPhase==='up'&&wy>sy-.005&&ang<130){rep=true;state.repPhase='down';}
+    cue=Math.abs(L.wr.y-R.wr.y)>.075?'Press both hands evenly — one side is leading.':'Lower under control. Keep shoulders down.';
+    stat=Math.abs(L.wr.y-R.wr.y)>.075?'Uneven press':'Good press';
+  }
+  else if(e.type==='raise'){
+    let wy=(L.wr.y+R.wr.y)/2,sy=(L.sh.y+R.sh.y)/2;
+    if(state.repPhase==='down'&&wy<sy+.03)state.repPhase='up';
+    if(state.repPhase==='up'&&wy>sy+.18){rep=true;state.repPhase='down';}
+    cue=wy<sy-.06?'Stop at shoulder height. Going too high shifts the load.':'Soft elbows. Raise slowly, lower slower.';
+    stat=wy<sy-.06?'Too high':'Controlled raise';
+  }
+  else if(e.type==='squat'){
+    let full=[L.hip,R.hip,L.kn,R.kn,L.ank,R.ank].every(x=>x&&x.visibility>.25);
+    if(!full){state.status='Need full body';state.cue='Squats need hips, knees, and ankles visible.';updateHud();return;}
+    let hip=(L.hip.y+R.hip.y)/2,kn=(L.kn.y+R.kn.y)/2;
+    if(state.repPhase==='down'&&hip>kn-.02)state.repPhase='bottom';
+    if(state.repPhase==='bottom'&&hip<kn-.16){rep=true;state.repPhase='down';}
+    cue=state.repPhase==='bottom'?'Good depth — now drive through your heels.':'Reach depth, sit between your feet. Knees track forward.';
+    stat=state.repPhase==='bottom'?'Depth reached':'Squat tracking';
+  }
+  else{
+    let elbow=(angle(L.sh,L.el,L.wr)+angle(R.sh,R.el,R.wr))/2;
+    if(state.repPhase==='down'&&elbow<95)state.repPhase='pull';
+    if(state.repPhase==='pull'&&elbow>140){rep=true;state.repPhase='down';}
+    cue=e.type==='row'?'Pull elbows back past your torso. Squeeze shoulder blades.':'Smooth press. Keep shoulders down and packed.';
+    stat=e.type==='row'?'Row path':'Chest press path';
+  }
+
+  if(rep){state.repCount++;if(state.repCount>=e.reps)completeSet();}
+  state.status=stat;
+  state.cue=cue;
+  updateHud();
+}
+
+// ── Teaching engine ──────────────────────────────────────────
+// Architecture: each step calls check(ok, holdMsg, advanceFn, errorMsg)
+// When ok is true for HOLD frames → advanceFn runs (next step or done)
+// When ok is false → reset counter, show specific correction
+
+function check(ok, holdStat, holdCue, adv, errStat, errCue){
+  if(ok){
+    state.teachMissFrames=0;
+    state.teachStepFrames++;
+    if(state.teachStepFrames===1){
+      // Just moved into correct position — show hold message once
+      state.teachTextLock=0;
+      state.status=holdStat;
+      state.cue=holdCue;
+      updateHud();
+    } else if(state.teachStepFrames>=HOLD){
+      adv(); // adv() calls updateHud() via advance() or doneTeaching()
+    }
+    // Don't touch the DOM on every intermediate hold frame — prevents flicker
+  } else {
+    // Hysteresis: if we're already mid-hold, absorb up to 8 jitter frames
+    // before resetting. Stops landmark noise from breaking the hold.
+    if(state.teachStepFrames>2){
+      state.teachMissFrames++;
+      if(state.teachMissFrames<=8) return;
+    }
+    state.teachMissFrames=0;
+    state.teachStepFrames=0;
+    // Text lock: once a correction is shown, don't replace it for ~20 frames
+    // so the user actually has time to read and act on it.
+    if(state.teachTextLock>0){state.teachTextLock--;return;}
+    state.teachTextLock=20;
+    state.status=errStat;
+    state.cue=errCue;
+    updateHud();
+  }
+}
+
+function advance(stat,cue){
+  state.teachPhase++;
+  state.teachStepFrames=0;
+  state.status=stat;
+  state.cue=cue;
+  updateHud();
+}
+
+function doneTeaching(e){
+  state.teachComplete=true;
+  state.repPhase='down';
+  state.repCount=0;
+  state.status='You\'ve got it!';
+  state.cue='Now do your '+e.reps+' reps. Keep the same form.';
+  updateHud();
+}
+
+function teachExercise(e,L,R,lm){
+  // Phase 0 — short intro so user can read before checks start
+  if(state.teachPhase===0){
+    const intros={
+      press:'Lift the weights to your shoulders. Elbows bent at 90°. I\'ll walk you through each part.',
+      squat:'Stand with feet shoulder-width apart, toes slightly out. I\'ll guide you through the squat.',
+      raise:'Let your arms hang at your sides. I\'ll guide you through the raise.',
+      row:'Stand holding the weight. I\'ll walk you through the hinge and pull.'
+    };
+    // Only write to DOM on the very first frame of intro — not every frame
+    if(state.teachStepFrames===0){
+      state.status='Form Coach — '+e.name;
+      state.cue=intros[e.type]||'Get ready. I\'ll guide you step by step.';
+      updateHud();
+    }
+    state.teachStepFrames++;
+    if(state.teachStepFrames>INTRO){state.teachPhase=1;state.teachStepFrames=0;}
+    return;
+  }
+  if(e.type==='press') teachPress(L,R,e);
+  else if(e.type==='squat') teachSquat(L,R,e);
+  else if(e.type==='raise') teachRaise(L,R,e);
+  else teachRow(L,R,e);
+}
+
+// ── SHOULDER / CHEST PRESS — 4 steps ─────────────────────────
+// 1. Start: hands at shoulder height, elbows at 90°
+// 2. Press: wrists above head, both arms even
+// 3. Top: elbows straight, hold
+// 4. Lower: hands back to shoulder height
+function teachPress(L,R,e){
+  const aL=angle(L.sh,L.el,L.wr), aR=angle(R.sh,R.el,R.wr);
+  const wyL=L.wr.y, wyR=R.wr.y, wy=(wyL+wyR)/2;
+  const sy=(L.sh.y+R.sh.y)/2;
+
+  if(state.teachPhase===1){
+    // Goal: wrists near shoulder height AND elbow ~90°
+    let heightOk = Math.abs(wy-sy)<0.15;
+    let elbowOk  = aL>68&&aL<116&&aR>68&&aR<116;
+
+    // Build one specific correction if failing
+    let err='Lift both hands to shoulder height — elbows bent like an L.';
+    if(heightOk&&!elbowOk){
+      err = aL<68 ? 'Bend your LEFT elbow more — make a 90° angle.' :
+            aR<68 ? 'Bend your RIGHT elbow more — make a 90° angle.' :
+            aL>116? 'Lower your LEFT hand slightly — elbow should be at 90°.' :
+                    'Lower your RIGHT hand slightly — elbow should be at 90°.';
+    } else if(!heightOk){
+      err = wyL>sy+0.15 ? 'Lift your LEFT hand up to shoulder level.' :
+            wyR>sy+0.15 ? 'Lift your RIGHT hand up to shoulder level.' :
+            wy<sy-0.18  ? 'Lower both hands down to shoulder level.' :
+                          'Bring both hands to shoulder height.';
+    }
+
+    check(heightOk&&elbowOk,
+      'Step 1 — Hold it','Good. Elbows at 90°, hands at shoulders. Hold...',
+      ()=>advance('Step 2 — Press up','Now push BOTH hands straight up to the ceiling. Keep them level.'),
+      'Step 1 — Starting position', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===2){
+    // Goal: both wrists clearly above head, roughly level
+    let high = wy < sy-0.20;
+    let even = Math.abs(wyL-wyR) < 0.12;
+
+    let err = 'Keep pressing UP — push both hands above your head.';
+    if(high&&!even){
+      err = wyL>wyR+0.10 ? 'LEFT hand is falling behind — push it up to match your right.' :
+                            'RIGHT hand is falling behind — push it up to match your left.';
+    } else if(!high){
+      err = wyL>wyR+0.12 ? 'LEFT arm is staying down — push it UP with your right.' :
+            wyR>wyL+0.12 ? 'RIGHT arm is staying down — push it UP with your left.' :
+                           'Keep pressing up — both hands need to go above your head.';
+    }
+
+    check(high&&even,
+      'Step 2 — Arms up','Hold. Both arms overhead.',
+      ()=>advance('Step 3 — Straighten','Now straighten both arms fully. Don\'t shrug — shoulders stay down.'),
+      'Step 2 — Press up', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===3){
+    // Goal: both elbows nearly straight (>140°) at the top
+    let extL = aL>138, extR = aR>138;
+
+    let err = !extL&&!extR ? 'Straighten both arms above your head — push a little more.' :
+              !extL         ? 'Straighten your LEFT arm — push it a little higher.' :
+                              'Straighten your RIGHT arm — push it a little higher.';
+
+    check(extL&&extR,
+      'Step 3 — Full extension','Arms straight overhead. Shoulders down. Hold...',
+      ()=>advance('Step 4 — Lower down','Now bring both hands SLOWLY back to shoulder height. Count 3 seconds.'),
+      'Step 3 — Extend arms', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===4){
+    // Goal: wrists back at shoulder height
+    let back = Math.abs(wy-sy)<0.15;
+
+    check(back,
+      'Step 4 — Back to start','Good control. Don\'t let the weight drop.',
+      ()=>doneTeaching(e),
+      'Step 4 — Lower down',
+      wy<sy-0.18 ? 'Keep lowering — bring hands all the way back to shoulder level.' :
+                   'Lower both hands to shoulder height. Slow and controlled.'
+    );
+  }
+}
+
+// ── SQUAT — 4 steps ──────────────────────────────────────────
+// 1. Stand: upright, feet visible
+// 2. Descend: hips dropping, knees tracking out
+// 3. Depth: hips at knee level, knees still out
+// 4. Stand: drive back up
+function teachSquat(L,R,e){
+  let full=[L.hip,R.hip,L.kn,R.kn,L.ank,R.ank].every(x=>x&&x.visibility>.25);
+  if(!full){
+    state.status='Step back from the camera';
+    state.cue='I need to see your full body — hips, knees, and feet must be visible.';
+    updateHud();
+    return;
+  }
+  const hipY=(L.hip.y+R.hip.y)/2, knY=(L.kn.y+R.kn.y)/2;
+  const knL=L.kn, knR=R.kn, ankL=L.ank, ankR=R.ank;
+
+  if(state.teachPhase===1){
+    // Goal: standing tall — hips clearly above knees
+    // Threshold loosened to 0.16 so it triggers for most people standing normally
+    check(hipY<knY-0.16,
+      'Step 1 — Good stance','Feet shoulder-width, toes slightly out. Core braced. Hold...',
+      ()=>advance('Step 2 — Sit down','Now bend your knees and sit BACK and DOWN. Push knees outward over your toes.'),
+      'Step 1 — Stand tall', 'Stand up straight. Hips above knees, weight even on both feet.'
+    );
+    return;
+  }
+
+  if(state.teachPhase===2){
+    // Goal: hips dropping, knees tracking over ankles
+    // FIXED: caving = knL.x decreasing (toward camera-left = inward for person's left knee)
+    // kOkL: left knee hasn't shifted too far inward (leftward in canvas space)
+    // kOkR: right knee hasn't shifted too far inward (rightward in canvas space)
+    let desc   = hipY > knY-0.22;
+    let kOkL   = knL.x >= ankL.x - 0.07;
+    let kOkR   = knR.x <= ankR.x + 0.07;
+    let kneesOk= kOkL&&kOkR;
+
+    let err='Bend your knees — sit your hips back and down.';
+    if(desc&&!kneesOk){
+      err = !kOkL ? 'LEFT knee is caving inward — push it out over your left toes.' :
+                    'RIGHT knee is caving inward — push it out over your right toes.';
+    }
+
+    check(desc&&kneesOk,
+      'Step 2 — Going down','Good. Chest tall, knees out. Keep descending.',
+      ()=>advance('Step 3 — Go deeper','Keep going — aim for thighs parallel to the floor.'),
+      'Step 2 — Sit back and down', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===3){
+    let depth  = hipY >= knY-0.10;
+    let kOkL   = knL.x >= ankL.x - 0.08;
+    let kOkR   = knR.x <= ankR.x + 0.08;
+    let kneesOk= kOkL&&kOkR;
+
+    let err = !depth ? (!kOkL ? 'LEFT knee caving — push it outward as you go deeper.' :
+                        !kOkR ? 'RIGHT knee caving — push it outward as you go deeper.' :
+                                'Go lower — thighs should reach parallel to the floor.')
+                     : (!kOkL ? 'At the bottom — push your LEFT knee outward.' :
+                                'At the bottom — push your RIGHT knee outward.');
+
+    check(depth&&kneesOk,
+      'Step 3 — Depth!','Hold the bottom. Chest tall, knees out, heels flat.',
+      ()=>advance('Step 4 — Stand up','Now push through your heels and stand ALL the way up.'),
+      'Step 3 — Reach depth', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===4){
+    check(hipY<knY-0.16,
+      'Step 4 — Stand tall','All the way up. Squeeze your glutes at the top.',
+      ()=>doneTeaching(e),
+      'Step 4 — Drive up', 'Push through your heels — stand FULLY upright.'
+    );
+  }
+}
+
+// ── LATERAL RAISE — 3 steps ──────────────────────────────────
+// 1. Arms at sides
+// 2. Raise to shoulder height, both even
+// 3. Lower slowly back down
+function teachRaise(L,R,e){
+  const wyL=L.wr.y, wyR=R.wr.y, wy=(wyL+wyR)/2;
+  const sy=(L.sh.y+R.sh.y)/2;
+  const hy=(L.hip.y+R.hip.y)/2;
+
+  if(state.teachPhase===1){
+    // Goal: wrists hanging near hip level
+    check(wy>hy-0.13,
+      'Step 1 — Good start','Arms at sides, soft bend in elbows. Core tight. Hold...',
+      ()=>advance('Step 2 — Raise','Now raise BOTH arms out to your sides. Stop when your hands reach shoulder height.'),
+      'Step 1 — Arms at sides', 'Lower your arms to your sides. Start from the bottom position.'
+    );
+    return;
+  }
+
+  if(state.teachPhase===2){
+    // Goal: wrists level with shoulders, both even, not too high
+    let tooHigh   = wy < sy-0.14;
+    let atShoulder= !tooHigh && Math.abs(wy-sy)<0.12;
+    let even      = Math.abs(wyL-wyR)<0.12;
+
+    let err;
+    if(tooHigh){
+      err='Too high — lower your arms slightly. Stop when hands are level with your shoulders.';
+    } else if(!atShoulder){
+      err = wyL>wyR+0.13 ? 'LEFT arm needs to come up — match your right side.' :
+            wyR>wyL+0.13 ? 'RIGHT arm needs to come up — match your left side.' :
+                           'Raise your arms higher — hands should be level with your shoulders.';
+    } else if(!even){
+      err = wyL>wyR+0.1 ? 'LEFT arm is lower — raise it to match your right.' :
+                          'RIGHT arm is lower — raise it to match your left.';
+    }
+
+    check(atShoulder&&even,
+      'Step 2 — Hold','Hands at shoulder height. Feel the squeeze in your shoulders.',
+      ()=>advance('Step 3 — Lower slowly','Now lower your arms SLOWLY back to your sides. 3 seconds. Resist the weight.'),
+      'Step 2 — Raise to shoulder height', err||'Raise arms until level with your shoulders.'
+    );
+    return;
+  }
+
+  if(state.teachPhase===3){
+    // Goal: arms back to sides
+    check(wy>hy-0.13,
+      'Step 3 — Back down','Good slow descent. That\'s the part that builds strength.',
+      ()=>doneTeaching(e),
+      'Step 3 — Lower slowly', 'Keep lowering — bring arms all the way back to your sides. Resist the weight.'
+    );
+  }
+}
+
+// ── BENT-OVER ROW — 4 steps ──────────────────────────────────
+// 1. Hinge: torso forward, shoulders near hip height
+// 2. Hang: arms straight, let weight stretch lats
+// 3. Pull: elbows drive back past body
+// 4. Lower: arms back to hanging
+function teachRow(L,R,e){
+  const aL=angle(L.sh,L.el,L.wr), aR=angle(R.sh,R.el,R.wr), aAvg=(aL+aR)/2;
+  const sy=(L.sh.y+R.sh.y)/2, hy=(L.hip.y+R.hip.y)/2;
+
+  if(state.teachPhase===1){
+    // Goal: shoulders near or at hip height (torso hinged forward)
+    check(sy>=hy-0.15,
+      'Step 1 — Hold the hinge','Back flat, not rounded. Torso leaning toward the floor. Hold...',
+      ()=>advance('Step 2 — Let arms hang','Now let your arms hang STRAIGHT down. Don\'t bend your elbows yet.'),
+      'Step 1 — Hinge forward', 'Bend forward at your hips until your torso is nearly parallel to the floor. Keep your back flat.'
+    );
+    return;
+  }
+
+  if(state.teachPhase===2){
+    // Goal: arms fully extended, hanging (elbow angle > 150°)
+    let err = aL<aR-20 ? 'Straighten your LEFT arm — let it hang down fully.' :
+              aR<aL-20 ? 'Straighten your RIGHT arm — let it hang down fully.' :
+                         'Straighten both arms — let gravity pull them straight down.';
+
+    check(aAvg>148,
+      'Step 2 — Arms hanging','Good. Lats are stretching. Stay hinged, don\'t stand up.',
+      ()=>advance('Step 3 — Pull','Drive BOTH elbows back behind your body. Think: elbows, not hands.'),
+      'Step 2 — Straighten your arms', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===3){
+    // Goal: elbows pulled back, angle drops below 90°
+    let err = aL>aR+22 ? 'LEFT elbow needs to pull further back — match your right.' :
+              aR>aL+22 ? 'RIGHT elbow needs to pull further back — match your left.' :
+                         'Pull harder — drive both elbows back past your body. Squeeze your shoulder blades.';
+
+    check(aAvg<92,
+      'Step 3 — Elbows back!','Shoulder blades squeezing together. Hold this position.',
+      ()=>advance('Step 4 — Lower down','Now lower both arms slowly back to hanging. Count 3 seconds. Stay hinged.'),
+      'Step 3 — Pull elbows back', err
+    );
+    return;
+  }
+
+  if(state.teachPhase===4){
+    // Goal: arms back to hanging (angle > 148°)
+    check(aAvg>148,
+      'Step 4 — Back to start','Stay hinged. Don\'t stand up. Good control.',
+      ()=>doneTeaching(e),
+      'Step 4 — Lower your arms', 'Straighten both arms fully. Stay hinged — don\'t stand up between reps.'
+    );
+  }
+}
+
+// ── Canvas teaching overlay ───────────────────────────────────
+// NOTE: both <video> and <canvas> have CSS transform:scaleX(-1), so:
+//   • Vertical arrows (up/down) work naturally — CSS flip doesn't affect Y
+//   • For horizontal arrows: drawing 'right' in canvas = appears pointing LEFT on screen
+//     because the flip reverses X. So to push person's LEFT knee outward (left on screen),
+//     we draw an arrow pointing 'right' in canvas coords.
+
+function drawTeachOverlay(ctx,lm,W,H){
+  if(!state.activeWorkout)return;
+  const e=state.activeWorkout.exercises[state.exIndex];
+  const p=i=>({x:lm[i].x*W, y:lm[i].y*H});
+
+  const LWR=p(15),RWR=p(16);
+  const LSH=p(11),RSH=p(12);
+  const LEL=p(13),REL=p(14);
+  const LHI=p(23),RHI=p(24);
+  const LKN=p(25),RKN=p(26);
+  const LAN=p(27),RAN=p(28);
+
+  const shY=(LSH.y+RSH.y)/2;
+  const hiY=(LHI.y+RHI.y)/2;
+  const knY=(LKN.y+RKN.y)/2;
+  const AMBER='#e2a64c', GREEN='#65c783', RED='#ef6d5a';
+  const prog=state.teachStepFrames/HOLD; // 0→1 fill as user holds position
+
+  // ── Drawing primitives ─────────────────────────────────
+
+  // Dashed horizontal guide line across full width at height y
+  function hGuide(y,col,alpha=0.55){
+    ctx.save();
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=2;
+    ctx.setLineDash([14,8]);
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+    ctx.restore();
+  }
+
+  // Arrow from (x,y) in a direction. dir='up'|'down'|'left'|'right'
+  function arrow(x,y,dir,col,size=48){
+    const dm={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+    const [dx,dy]=dm[dir]||[0,-1];
+    const tx=x+dx*size, ty=y+dy*size;
+    ctx.save();
+    ctx.strokeStyle=col;ctx.fillStyle=col;
+    ctx.lineWidth=5;ctx.lineCap='round';ctx.globalAlpha=0.92;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();
+    const a=Math.atan2(ty-y,tx-x);
+    ctx.beginPath();
+    ctx.moveTo(tx,ty);
+    ctx.lineTo(tx-16*Math.cos(a-0.44),ty-16*Math.sin(a-0.44));
+    ctx.lineTo(tx-16*Math.cos(a+0.44),ty-16*Math.sin(a+0.44));
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  // Pulsing ring around a joint = "in position, hold here"
+  // Shows a circular arc that fills from 0→360° as the user holds
+  function holdRing(x,y,p,col){
+    ctx.save();
+    ctx.globalAlpha=0.88;
+    // background ring
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=5;
+    ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.stroke();
+    // progress arc
+    ctx.strokeStyle=col;ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.arc(x,y,20,-Math.PI/2,-Math.PI/2+p*Math.PI*2);
+    ctx.stroke();
+    // inner dot
+    ctx.fillStyle=col;ctx.globalAlpha=0.6;
+    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Full green checkmark — joint is confirmed correct
+  function checkmark(x,y){
+    ctx.save();
+    ctx.strokeStyle=GREEN;ctx.lineWidth=5;ctx.lineCap='round';ctx.globalAlpha=0.9;
+    ctx.fillStyle='rgba(101,199,131,0.18)';
+    ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(x-9,y);ctx.lineTo(x-1,y+9);ctx.lineTo(x+11,y-9);ctx.stroke();
+    ctx.restore();
+  }
+
+  // nudge: arrow toward targetY or holdRing if already there
+  function nudgeY(joint,targetY,col,thresh=H*0.04){
+    const dy=joint.y-targetY;
+    if(dy>thresh)       arrow(joint.x,joint.y,'up',col,Math.min(65,dy*0.6));
+    else if(dy<-thresh) arrow(joint.x,joint.y,'down',col,Math.min(65,-dy*0.6));
+    else                holdRing(joint.x,joint.y,prog,col);
+  }
+
+  // ── Per-exercise overlays ──────────────────────────────
+
+  if(e.type==='press'){
+    if(state.teachPhase===1){
+      // Step 1: hands to shoulder height
+      hGuide(shY,AMBER);
+      // target dot at shoulder height for each wrist
+      ctx.save();ctx.strokeStyle=AMBER;ctx.globalAlpha=0.6;ctx.lineWidth=2;ctx.setLineDash([6,6]);
+      ctx.beginPath();ctx.arc(LWR.x,shY,14,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(RWR.x,shY,14,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+      nudgeY(LWR,shY,AMBER);
+      nudgeY(RWR,shY,AMBER);
+    }
+    if(state.teachPhase===2){
+      // Step 2: press up — target is above shoulder height
+      const tY=shY-H*0.20;
+      hGuide(tY,GREEN,0.45);
+      nudgeY(LWR,tY,GREEN);
+      nudgeY(RWR,tY,GREEN);
+      // Show "level" cue if one arm is higher
+      if(Math.abs(LWR.y-RWR.y)>H*0.05){
+        const lower=LWR.y>RWR.y?LWR:RWR;
+        arrow(lower.x,lower.y,'up',AMBER,40);
+      }
+    }
+    if(state.teachPhase===3){
+      // Step 3: straighten elbows at top
+      const aL=angle(lm[11],lm[13],lm[15]);
+      const aR=angle(lm[12],lm[14],lm[16]);
+      if(aL<138) arrow(LWR.x,LWR.y,'up',GREEN,36);
+      else        holdRing(LWR.x,LWR.y,prog,GREEN);
+      if(aR<138) arrow(RWR.x,RWR.y,'up',GREEN,36);
+      else        holdRing(RWR.x,RWR.y,prog,GREEN);
+    }
+    if(state.teachPhase===4){
+      // Step 4: lower back down to shoulder height
+      hGuide(shY,GREEN);
+      nudgeY(LWR,shY,GREEN);
+      nudgeY(RWR,shY,GREEN);
+    }
+  }
+
+  else if(e.type==='raise'){
+    if(state.teachPhase===1){
+      // Step 1: arms at sides (hip level)
+      hGuide(hiY,AMBER,0.4);
+      nudgeY(LWR,hiY,AMBER);
+      nudgeY(RWR,hiY,AMBER);
+    }
+    if(state.teachPhase===2){
+      // Step 2: raise to shoulder height
+      hGuide(shY,GREEN,0.5);
+      const tooHighL=LWR.y<shY-H*0.13;
+      const tooHighR=RWR.y<shY-H*0.13;
+      if(tooHighL) arrow(LWR.x,LWR.y,'down',RED,40);
+      else nudgeY(LWR,shY,GREEN);
+      if(tooHighR) arrow(RWR.x,RWR.y,'down',RED,40);
+      else nudgeY(RWR,shY,GREEN);
+      // Level cue
+      if(!tooHighL&&!tooHighR&&Math.abs(LWR.y-RWR.y)>H*0.05){
+        const lower=LWR.y>RWR.y?LWR:RWR;
+        arrow(lower.x,lower.y,'up',AMBER,38);
+      }
+    }
+    if(state.teachPhase===3){
+      // Step 3: lower back down
+      hGuide(hiY,GREEN,0.45);
+      nudgeY(LWR,hiY,GREEN);
+      nudgeY(RWR,hiY,GREEN);
+    }
+  }
+
+  else if(e.type==='squat'){
+    const full=[lm[23],lm[24],lm[25],lm[26],lm[27],lm[28]].every(x=>x&&x.visibility>.25);
+    if(!full)return;
+
+    // Knee caving detection in pixel space (same logic as teachSquat, now correct):
+    // LEFT knee (lm[25]): high canvas x. Caving = x decreasing (leftward in canvas = inward)
+    // RIGHT knee (lm[26]): low canvas x. Caving = x increasing (rightward in canvas = inward)
+    const lKnCave = LKN.x < LAN.x - W*0.05;
+    const rKnCave = RKN.x > RAN.x + W*0.05;
+
+    if(state.teachPhase===1){
+      if(hiY>knY-H*0.16) arrow(LHI.x,LHI.y,'up',AMBER,50);
+      else holdRing(LHI.x,LHI.y,prog,GREEN);
+    }
+    if(state.teachPhase===2){
+      // Hip going down
+      arrow(LHI.x,LHI.y,'down',AMBER,40);
+      // Knee outward cues
+      // NOTE: drawing 'right' in canvas = appears pointing LEFT on screen = outward for person's LEFT knee
+      if(lKnCave) arrow(LKN.x,LKN.y,'right',RED,50);
+      else        checkmark(LKN.x,LKN.y);
+      // drawing 'left' in canvas = appears pointing RIGHT on screen = outward for person's RIGHT knee
+      if(rKnCave) arrow(RKN.x,RKN.y,'left',RED,50);
+      else        checkmark(RKN.x,RKN.y);
+    }
+    if(state.teachPhase===3){
+      // Reach depth — hip should descend to knee level
+      if(hiY<knY-H*0.10) arrow(LHI.x,LHI.y,'down',AMBER,40);
+      else                 holdRing(LHI.x,LHI.y,prog,GREEN);
+      // Knees still
+      if(lKnCave) arrow(LKN.x,LKN.y,'right',RED,50);
+      else        checkmark(LKN.x,LKN.y);
+      if(rKnCave) arrow(RKN.x,RKN.y,'left',RED,50);
+      else        checkmark(RKN.x,RKN.y);
+    }
+    if(state.teachPhase===4){
+      arrow(LHI.x,LHI.y,'up',GREEN,55);
+      if(hiY<knY-H*0.16) holdRing(LHI.x,LHI.y,prog,GREEN);
+    }
+  }
+
+  else if(e.type==='row'){
+    if(state.teachPhase===1){
+      // Hinge: shoulder should drop toward hip level
+      if(LSH.y<LHI.y-H*0.15){
+        arrow(LSH.x,LSH.y,'down',AMBER,45);
+        arrow(RSH.x,RSH.y,'down',AMBER,45);
+      } else {
+        holdRing(LSH.x,LSH.y,prog,GREEN);
+        holdRing(RSH.x,RSH.y,prog,GREEN);
+      }
+    }
+    if(state.teachPhase===2){
+      // Arms hang straight
+      const aL=angle(lm[11],lm[13],lm[15]);
+      const aR=angle(lm[12],lm[14],lm[16]);
+      if(aL<148) arrow(LWR.x,LWR.y,'down',AMBER,40);
+      else        holdRing(LWR.x,LWR.y,prog,GREEN);
+      if(aR<148) arrow(RWR.x,RWR.y,'down',AMBER,40);
+      else        holdRing(RWR.x,RWR.y,prog,GREEN);
+    }
+    if(state.teachPhase===3){
+      // Pull elbows back — hard to see from front; visualise elbow rising
+      const aL=angle(lm[11],lm[13],lm[15]);
+      const aR=angle(lm[12],lm[14],lm[16]);
+      if(aL>92) arrow(LEL.x,LEL.y,'up',GREEN,40);
+      else       holdRing(LEL.x,LEL.y,prog,GREEN);
+      if(aR>92) arrow(REL.x,REL.y,'up',GREEN,40);
+      else       holdRing(REL.x,REL.y,prog,GREEN);
+    }
+    if(state.teachPhase===4){
+      // Lower arms back to straight
+      const aL=angle(lm[11],lm[13],lm[15]);
+      const aR=angle(lm[12],lm[14],lm[16]);
+      if(aL<148) arrow(LWR.x,LWR.y,'down',GREEN,40);
+      else        holdRing(LWR.x,LWR.y,prog,GREEN);
+      if(aR<148) arrow(RWR.x,RWR.y,'down',GREEN,40);
+      else        holdRing(RWR.x,RWR.y,prog,GREEN);
+    }
+  }
+}
+
+function angle(a,b,c){
+  let ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};
+  let dot=ab.x*cb.x+ab.y*cb.y;
+  let mag=Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y);
+  return Math.acos(Math.max(-1,Math.min(1,dot/mag)))*180/Math.PI;
+}
+
+function updateHud(){
+  const r=document.getElementById('rep');
+  const s=document.getElementById('status');
+  const c=document.getElementById('cue');
+  const rl=document.getElementById('rep-label');
+  const e=state.activeWorkout?.exercises[state.exIndex];
+  // Numbers can update freely (they change meaningfully each frame)
+  if(r) r.textContent=state.teachComplete?state.repCount:(state.teachPhase||'→');
+  if(rl) rl.textContent=state.teachComplete?'/'+(e?.reps||''):'steps';
+  // Text: only write to DOM when the string actually changed — prevents layout
+  // thrash and stops the bottom panel from visually glitching every frame
+  if(s&&s.textContent!==state.status) s.textContent=state.status;
+  if(c&&c.textContent!==state.cue)    c.textContent=state.cue;
+}
+
+window.startCamera=startCamera;
+
+function finishWorkout(){
+  stopCamera();
+  let sets=Object.values(state.setDone).filter(Boolean).length;
+  state.history.unshift({
+    name:state.activeWorkout?.name||'Full Body Beginner',
+    date:'Today',
+    sets,
+    mode:state.mode==='meta'?'Meta glasses':'Phone / manual'
+  });
+  state.screen='summary';
+  render();
+}
+
+window.finishWorkout=finishWorkout;
+
+/* ── Summary ─────────────────────────────────────────────── */
+function summary(){
+  resetShell();
+  let p=poke();
+  let sets=state.history[0]?.sets||0;
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="stage">
+        <img src="${p.sprite}">
+        <div class="name">Workout complete</div>
+        <p>${cap(p.name)} logged the work and updated your growth.</p>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric"><strong>${sets}</strong><span>sets</span></div>
+        <div class="metric"><strong>${state.totalARReps}</strong><span>AR reps</span></div>
+        <div class="metric"><strong>+28</strong><span>XP</span></div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Summary</h3>
+        <p class="lead">Full-body workout completed. Set summaries were captured exercise by exercise. Next time, repeat the same routine and beat form consistency.</p>
+        <button class="btn primary" style="margin-top:16px" onclick="go('home')">Return home</button>
+        <button class="btn ghost" style="width:100%;margin-top:10px" onclick="go('learn')">Review exercise guides</button>
+      </div>
+    </section>
+  `;
+}
+
+/* ── Coach ───────────────────────────────────────────────── */
+function coach(){
+  resetShell();
+  let sets=state.history.reduce((a,h)=>a+h.sets,0);
+  let history=state.history;
+
+  root.innerHTML=`
+    <section class="screen">
+      <div class="top">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Coach</div>
+          <h2>Beginner analytics.</h2>
+        </div>
+        <span class="badge green">90d</span>
+      </div>
+
+      <div class="coach-grid">
+        <div class="metric"><strong>${sets}</strong><span>Total sets</span></div>
+        <div class="metric"><strong>${state.totalARReps}</strong><span>AR reps</span></div>
+        <div class="metric"><strong>${history.length}</strong><span>Active days</span></div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Training signal</h3>
+        <p class="lead">Nudge tracks what matters for a beginner: sessions completed, exercises learned, form cues corrected, and repeatable workouts saved.</p>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <div class="top" style="margin-bottom:8px">
+          <div>
+            <h3>Previous workouts</h3>
+            <p class="tiny" style="margin-top:4px">Your saved session history.</p>
+          </div>
+          <span class="badge">${history.length} logs</span>
+        </div>
+
+        ${history.length?history.map(h=>`
+          <div class="row">
+            <div>
+              <strong>${h.name}</strong>
+              <p class="tiny">${h.date} · ${h.mode}</p>
+            </div>
+            <span class="badge">${h.sets} sets</span>
+          </div>
+        `).join(''):`
+          <div class="row">
+            <div>
+              <strong>No workouts yet</strong>
+              <p class="tiny">Finish your first session and it will appear here.</p>
+            </div>
+            <button class="btn ghost small" onclick="go('home')">Start</button>
+          </div>
+        `}
+      </div>
+
+      <div class="chart" style="margin-top:14px">
+        <h3>Volume over time</h3>
+        <p class="tiny">Sets per session.</p>
+        <div class="bars">
+          ${[35,60,42,72,56,85].map(h=>`<span class="bar" style="height:${h}px"></span>`).join('')}
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h3>Activity</h3>
+        <div class="heat">
+          ${Array.from({length:28}).map((_,i)=>`<span class="day ${[1,4,8,10,14,17,21,24].includes(i)?'on':''}"></span>`).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ── Strategy ────────────────────────────────────────────── */
+function strategy(){
+  resetShell();
+  root.innerHTML=`
+    <section class="screen">
+      <button class="btn ghost small" onclick="go('home')">← Back</button>
+      <div style="margin-top:18px">
+        <div class="eyebrow">Strategy</div>
+        <h1>Everything EpicGains does, rebuilt around beginners.</h1>
+        <p class="lead">V1 shows the full loop: onboard, companion, saved workout, add exercises, CSV import, normal logging, AR phone/glasses mode, automatic set/exercise summaries, workout summary, and coach analytics.</p>
+      </div>
+      <div class="card pad" style="margin-top:16px">
+        <h3>Backbone copied structurally, not visually</h3>
+        <p class="lead">Routines, exercise library, favorites/custom workouts, set logging, automatic rest/set flow, summaries, analytics, social/comparison roadmap, and import are represented.</p>
+      </div>
+      <div class="card pad" style="margin-top:14px">
+        <h3>What changes</h3>
+        <p class="lead">EpicGains rewards after logging. Nudge coaches during the workout and logs automatically when Meta glasses are active.</p>
+      </div>
+    </section>
+  `;
+}
+
+/* ── Router ──────────────────────────────────────────────── */
+function render(){
+  if(state.screen==='onboarding'){setNav('');onboarding();}
+  else if(state.screen==='match'){setNav('');match();}
+  else if(state.screen==='home'){setNav('home');home();}
+  else if(state.screen==='workouts'){setNav('workouts');workouts();}
+  else if(state.screen==='learn'){setNav('learn');learn();}
+  else if(state.screen==='log'){setNav('workouts');log();}
+  else if(state.screen==='ar'){setNav('');ar();}
+  else if(state.screen==='summary'){setNav('home');summary();}
+  else if(state.screen==='coach'){setNav('coach');coach();}
+  else if(state.screen==='strategy'){setNav('');strategy();}
+  else{setNav('home');home();}
+}
+
+render();
+</script>
+</body>
+</html>
