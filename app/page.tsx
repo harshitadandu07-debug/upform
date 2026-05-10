@@ -59,6 +59,7 @@ export default function Page() {
   const [restActive,        setRestActive]        = useState(false);
   const [restSeconds,       setRestSeconds]       = useState(60);
   const [showExerciseIntro, setShowExerciseIntro] = useState(false);
+  const [paused,            setPaused]            = useState(false);
 
   const videoRef      = useRef<HTMLVideoElement>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
@@ -82,6 +83,7 @@ export default function Page() {
   });
   const cornerStatusRef  = useRef<"good"|"bad"|"neutral">("neutral");
   const restActiveRef    = useRef(false);
+  const pausedRef        = useRef(false);
   const restIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentSetRef    = useRef(1);
   const exIdxRef         = useRef(0);
@@ -215,6 +217,23 @@ export default function Page() {
     }
   }, [speak, resetRep, exitCamera]);
 
+  const pauseWorkout = useCallback(() => {
+    pausedRef.current = true;
+    setPaused(true);
+    speak("Paused. Say continue to resume.", true);
+  }, [speak]);
+
+  const resumeWorkout = useCallback(() => {
+    pausedRef.current = false;
+    setPaused(false);
+    speak("Resuming.", true);
+  }, [speak]);
+
+  const endWorkout = useCallback(() => {
+    speak("Ending workout. Great job today!", true);
+    setTimeout(() => exitCamera(), 1800);
+  }, [speak, exitCamera]);
+
   const startVoiceRecognition = useCallback(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR || listenActiveRef.current) return;
@@ -234,6 +253,12 @@ export default function Page() {
             if (text.includes("skip")) {
               speak("Skipping.", true);
               setTimeout(() => advanceAfterRest(), 700);
+            } else if (text.includes("end workout") || text.includes("finish")) {
+              endWorkout();
+            } else if (text.includes("pause")) {
+              pauseWorkout();
+            } else if (text.includes("continue") || text.includes("resume") || text.includes("start")) {
+              if (pausedRef.current) resumeWorkout();
             }
           }
         }
@@ -262,7 +287,7 @@ export default function Page() {
     };
 
     listen();
-  }, [speak, advanceAfterRest]);
+  }, [speak, advanceAfterRest, pauseWorkout, resumeWorkout, endWorkout]);
 
   // Show lateral-raises form tutorial when that exercise begins in the camera screen
   useEffect(() => {
@@ -303,6 +328,7 @@ export default function Page() {
     speak("Rest. One minute.", true);
     let secs = 60;
     const interval = setInterval(() => {
+      if (pausedRef.current) return;
       secs -= 1;
       setRestSeconds(secs);
       if (secs === 30) speak("30 seconds.", true);
@@ -739,8 +765,8 @@ export default function Page() {
           canvas.width  = video.videoWidth  || 1280;
           canvas.height = video.videoHeight || 720;
 
-          // During rest: clear any skeleton lines but don't run detection
-          if (restActiveRef.current) {
+          // During rest or pause: clear skeleton but don't run detection
+          if (restActiveRef.current || pausedRef.current) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             animRef.current = requestAnimationFrame(loop);
             return;
@@ -1581,7 +1607,7 @@ export default function Page() {
               }}>
                 <span style={{ fontSize:13 }}>🎤</span>
                 <span style={{ fontSize:11, color:"rgba(255,255,255,.55)", fontWeight:600 }}>
-                  say "skip"
+                  "skip" · "pause" · "end workout"
                 </span>
               </div>
             </div>
@@ -1655,6 +1681,44 @@ export default function Page() {
                 </div>
               );
             })()}
+
+            {/* ── PAUSE OVERLAY ── */}
+            {paused && (
+              <div style={{
+                position:"absolute", inset:0, zIndex:40,
+                display:"flex", flexDirection:"column",
+                alignItems:"center", justifyContent:"center", gap:0,
+                background:"rgba(5,6,5,.82)",
+                backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
+              }}>
+                <p style={{ fontSize:11, fontWeight:700, textTransform:"uppercase",
+                  letterSpacing:".18em", color:"rgba(255,255,255,.45)", margin:"0 0 28px" }}>
+                  PAUSED
+                </p>
+                <span style={{ fontSize:72, lineHeight:1, marginBottom:28 }}>⏸</span>
+                <p style={{ fontSize:14, color:"rgba(255,255,255,.45)", margin:"0 0 32px",
+                  fontWeight:500 }}>
+                  Say "continue" or tap to resume
+                </p>
+                <button onClick={resumeWorkout} style={{
+                  background:"rgba(255,255,255,.12)",
+                  border:"1px solid rgba(255,255,255,.22)", borderRadius:12,
+                  padding:"11px 28px", color:"rgba(255,255,255,.8)",
+                  fontSize:14, fontWeight:600, cursor:"pointer",
+                  backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+                  marginBottom:16,
+                }}>
+                  Resume →
+                </button>
+                <button onClick={endWorkout} style={{
+                  background:"transparent", border:"none",
+                  color:"rgba(255,255,255,.35)", fontSize:13,
+                  fontWeight:500, cursor:"pointer", padding:"8px 16px",
+                }}>
+                  End workout
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
