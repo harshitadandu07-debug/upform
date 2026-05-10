@@ -37,12 +37,54 @@ function calcAngle(
   return Math.acos(Math.max(-1, Math.min(1, dot / mag))) * 180 / Math.PI;
 }
 
+function _LoaderScreen({ onDone }: { onDone: () => void }) {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const d = setInterval(() => setDots(p => p.length >= 3 ? "" : p + "."), 500);
+    const t = setTimeout(onDone, 4500);
+    return () => { clearInterval(d); clearTimeout(t); };
+  }, [onDone]);
+  return (
+    <div className="app">
+      <div className="mobile-frame" style={{
+        display:"flex", flexDirection:"column",
+        alignItems:"center", justifyContent:"center",
+        minHeight:"100vh", padding:"32px",
+      }}>
+        <div style={{
+          width:64, height:64, borderRadius:"50%",
+          border:"3px solid var(--color-stone)",
+          borderTopColor:"var(--color-forest-canopy)",
+          animation:"spin 0.9s linear infinite",
+          marginBottom:36,
+        }}/>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <p style={{ fontSize:20, fontWeight:700, color:"var(--color-ink)",
+          textAlign:"center", margin:"0 0 10px", letterSpacing:"-.01em" }}>
+          Building your plan
+        </p>
+        <p style={{ fontSize:15, color:"var(--color-muted-ash)",
+          textAlign:"center", margin:0, minHeight:22 }}>
+          Personalising your workout{dots}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Page() {
   const today    = new Date();
   const todayIdx = today.getDay();
 
   const [onboarded,    setOnboarded]    = useState<boolean | null>(null); // null = checking
-  const [onboardStep,  setOnboardStep]  = useState(0);                   // 0 = splash, 1-3 = steps
+  const [onboardStep,  setOnboardStep]  = useState(0);                   // 0-3 intro, 4 name, 5-8 profile, 9 loader
+  const [userName,     setUserName]     = useState("");
+  const [heightVal,    setHeightVal]    = useState("");
+  const [weightVal,    setWeightVal]    = useState("");
+  const [ageVal,       setAgeVal]       = useState("");
+  const [selectedGoals,setSelectedGoals]= useState<string[]>([]);
+  const [heightUnit,   setHeightUnit]   = useState<"cm"|"ft">("cm");
+  const [weightUnit,   setWeightUnit]   = useState<"kg"|"lbs">("kg");
   const [screen,       setScreen]       = useState<Screen>("home");
   const [mode,         setMode]         = useState("glasses");
   const [permState,  setPermState]  = useState<PermState>("idle");
@@ -187,8 +229,10 @@ export default function Page() {
     // ?reset clears the flag so onboarding shows again (handy for demos/sharing)
     if (window.location.search.includes("reset")) {
       localStorage.removeItem("upform_onboarded");
+      localStorage.removeItem("upform_name");
     }
     setOnboarded(localStorage.getItem("upform_onboarded") === "true");
+    setUserName(localStorage.getItem("upform_name") || "");
   }, []);
 
   // Keep refs in sync so async callbacks (intervals) read fresh values
@@ -861,131 +905,360 @@ export default function Page() {
     return d;
   });
 
-  /* ─── SPLASH / ONBOARDING ──────────────────────────────── */
-  if (onboarded === null) return null; // SSR / localStorage check in progress
+  /* ─── ONBOARDING ───────────────────────────────────────── */
+  if (onboarded === null) return null;
 
   if (!onboarded) {
     const finish = () => {
+      if (userName.trim()) localStorage.setItem("upform_name", userName.trim());
       localStorage.setItem("upform_onboarded", "true");
       setOnboarded(true);
     };
 
-    const OB = [
-      {
-        img: "https://cdn.undraw.co/illustration/athletes-training_koqa.svg?type=svg",
-        title: "Form-perfect workouts",
-        body: "AI watches your pose in real time and gives instant corrections — no guesswork.",
-      },
-      {
-        img: "https://cdn.undraw.co/illustration/fitness-stats_bd09.svg?type=svg",
-        title: "Every good rep counts",
-        body: "Reps are counted automatically. Only clean form adds to your total.",
-      },
-      {
-        img: "https://cdn.undraw.co/illustration/morning-workout_73u9.svg?type=svg",
-        title: "Hands-free coaching",
-        body: 'Say "Skip" to jump to the next set. Voice cues keep you in the zone.',
-      },
-    ];
+    // ── Loader (step 9) — auto-advances after 4.5 s ──
+    if (onboardStep === 9) {
+      return (
+        <_LoaderScreen onDone={finish} />
+      );
+    }
 
-    // ── Splash ──
-    if (onboardStep === 0) return (
-      <div className="app">
-        <div className="mobile-frame" style={{
-          display:"flex", flexDirection:"column",
-          alignItems:"center", padding:"72px 32px 44px",
-          justifyContent:"space-between",
-        }}>
-          <div style={{ textAlign:"center" }}>
-            <h1 style={{ fontSize:52, fontWeight:800, letterSpacing:"-.03em",
-              color:"var(--color-ink)", margin:0 }}>UpForm</h1>
-            <p style={{ color:"var(--color-muted-ash)", fontSize:16, marginTop:8 }}>
-              Your AI workout coach
-            </p>
-          </div>
+    // ── Profile screens (steps 5–8): height / weight / age / goals ──
+    if (onboardStep >= 5) {
+      const profileIdx  = onboardStep - 5; // 0–3
+      const isLastProf  = profileIdx === 3;
+      const GOALS = ["Build Muscle","Lose Weight","Improve Endurance","Better Form","Stay Active"];
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://cdn.undraw.co/illustration/working-out_6ksl.svg?type=svg"
-            alt="Working out"
-            style={{ width:"100%", maxWidth:300, margin:"40px auto" }}
-          />
+      const advanceProfile = () => {
+        if (isLastProf) { setOnboardStep(9); }
+        else            { setOnboardStep(s => s + 1); }
+      };
 
-          <div style={{ width:"100%" }}>
-            <button onClick={() => setOnboardStep(1)} style={{
-              width:"100%", height:54, background:"var(--color-forest-canopy)",
-              border:"none", borderRadius:16, fontSize:17, fontWeight:700,
-              color:"var(--color-ink)", cursor:"pointer", marginBottom:14,
-            }}>
-              Get Started
-            </button>
-            <button onClick={finish} style={{
-              background:"none", border:"none", color:"var(--color-muted-ash)",
-              fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
-            }}>
-              Skip intro
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+      const toggleGoal = (g: string) =>
+        setSelectedGoals(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
 
-    // ── Onboarding steps 1–3 ──
-    const ob      = OB[onboardStep - 1];
-    const isLast  = onboardStep === 3;
-    return (
-      <div className="app">
-        <div className="mobile-frame" style={{
-          display:"flex", flexDirection:"column",
-          padding:"60px 32px 44px", justifyContent:"space-between",
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={ob.img}
-            alt={ob.title}
-            style={{ width:"100%", maxWidth:280, margin:"0 auto 36px", display:"block" }}
-          />
+      return (
+        <div className="app">
+          <div className="mobile-frame" style={{
+            display:"flex", flexDirection:"column",
+            padding:"56px 32px 44px", justifyContent:"space-between", minHeight:"100vh",
+          }}>
+            {/* Header */}
+            <div>
+              <button onClick={() => setOnboardStep(s => s - 1)} style={{
+                background:"none", border:"none", padding:0, marginBottom:32,
+                color:"var(--color-muted-ash)", fontSize:22, cursor:"pointer",
+              }}>←</button>
 
-          <div style={{ flex:1 }}>
-            <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:"-.02em",
-              color:"var(--color-ink)", marginBottom:14 }}>
-              {ob.title}
-            </h2>
-            <p style={{ fontSize:16, color:"var(--color-muted-ash)", lineHeight:1.65 }}>
-              {ob.body}
-            </p>
-          </div>
+              <p style={{ fontSize:13, fontWeight:700, textTransform:"uppercase",
+                letterSpacing:".12em", color:"var(--color-forest-canopy)",
+                margin:"0 0 8px" }}>
+                Hi {userName.trim() || "there"} 👋
+              </p>
+              <h2 style={{ fontSize:28, fontWeight:700, letterSpacing:"-.02em",
+                color:"var(--color-ink)", margin:"0 0 6px" }}>
+                {profileIdx === 0 && "How tall are you?"}
+                {profileIdx === 1 && "What do you weigh?"}
+                {profileIdx === 2 && "How old are you?"}
+                {profileIdx === 3 && "What are your main goals?"}
+              </h2>
+              <p style={{ fontSize:14, color:"var(--color-muted-ash)", margin:"0 0 36px" }}>
+                {profileIdx === 0 && "We use this to calibrate your movement tracking."}
+                {profileIdx === 1 && "This helps us set the right intensity for your workouts."}
+                {profileIdx === 2 && "Age helps us tailor recovery time and exercise selection."}
+                {profileIdx === 3 && "Pick everything that applies — we'll build around it."}
+              </p>
 
-          <div style={{ width:"100%", paddingTop:32 }}>
-            {/* Step dots */}
-            <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:28 }}>
-              {[1,2,3].map(i => (
-                <div key={i} style={{
-                  height:8, borderRadius:4, transition:"width .3s",
-                  width: i === onboardStep ? 28 : 8,
-                  background: i === onboardStep ? "var(--color-forest-canopy)" : "var(--color-stone)",
-                }}/>
-              ))}
+              {/* ── Height ── */}
+              {profileIdx === 0 && (
+                <div>
+                  <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                    {(["cm","ft"] as const).map(u => (
+                      <button key={u} onClick={() => setHeightUnit(u)} style={{
+                        flex:1, height:40, borderRadius:12, fontSize:14, fontWeight:600,
+                        border:"1.5px solid",
+                        borderColor: heightUnit === u ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                        background: heightUnit === u ? "var(--color-forest-canopy)" : "transparent",
+                        color:"var(--color-ink)",
+                      }}>{u}</button>
+                    ))}
+                  </div>
+                  <input
+                    type="number" value={heightVal}
+                    onChange={e => setHeightVal(e.target.value)}
+                    placeholder={heightUnit === "cm" ? "e.g. 175" : "e.g. 5.9"}
+                    style={{
+                      width:"100%", height:56, borderRadius:14, border:"1.5px solid var(--color-stone)",
+                      padding:"0 18px", fontSize:18, fontWeight:500, outline:"none",
+                      background:"transparent", color:"var(--color-ink)",
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* ── Weight ── */}
+              {profileIdx === 1 && (
+                <div>
+                  <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                    {(["kg","lbs"] as const).map(u => (
+                      <button key={u} onClick={() => setWeightUnit(u)} style={{
+                        flex:1, height:40, borderRadius:12, fontSize:14, fontWeight:600,
+                        border:"1.5px solid",
+                        borderColor: weightUnit === u ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                        background: weightUnit === u ? "var(--color-forest-canopy)" : "transparent",
+                        color:"var(--color-ink)",
+                      }}>{u}</button>
+                    ))}
+                  </div>
+                  <input
+                    type="number" value={weightVal}
+                    onChange={e => setWeightVal(e.target.value)}
+                    placeholder={weightUnit === "kg" ? "e.g. 70" : "e.g. 154"}
+                    style={{
+                      width:"100%", height:56, borderRadius:14, border:"1.5px solid var(--color-stone)",
+                      padding:"0 18px", fontSize:18, fontWeight:500, outline:"none",
+                      background:"transparent", color:"var(--color-ink)",
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* ── Age ── */}
+              {profileIdx === 2 && (
+                <input
+                  type="number" value={ageVal}
+                  onChange={e => setAgeVal(e.target.value)}
+                  placeholder="e.g. 28"
+                  style={{
+                    width:"100%", height:56, borderRadius:14, border:"1.5px solid var(--color-stone)",
+                    padding:"0 18px", fontSize:18, fontWeight:500, outline:"none",
+                    background:"transparent", color:"var(--color-ink)",
+                  }}
+                />
+              )}
+
+              {/* ── Goals ── */}
+              {profileIdx === 3 && (
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {GOALS.map(g => {
+                    const active = selectedGoals.includes(g);
+                    return (
+                      <button key={g} onClick={() => toggleGoal(g)} style={{
+                        width:"100%", height:52, borderRadius:14, fontSize:15, fontWeight:600,
+                        textAlign:"left", padding:"0 18px",
+                        border:"1.5px solid",
+                        borderColor: active ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                        background: active ? "var(--color-forest-canopy)" : "transparent",
+                        color:"var(--color-ink)", cursor:"pointer",
+                        display:"flex", alignItems:"center", justifyContent:"space-between",
+                      }}>
+                        {g}
+                        {active && <span style={{ fontSize:16 }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={() => isLast ? finish() : setOnboardStep(s => s + 1)}
-              style={{
+            {/* Progress dots */}
+            <div style={{ paddingTop:32 }}>
+              <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:24 }}>
+                {[0,1,2,3].map(i => (
+                  <div key={i} style={{
+                    height:6, borderRadius:3, transition:"width .3s",
+                    width: i === profileIdx ? 24 : 6,
+                    background: i === profileIdx ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                  }}/>
+                ))}
+              </div>
+
+              <button onClick={advanceProfile} style={{
                 width:"100%", height:54, background:"var(--color-forest-canopy)",
                 border:"none", borderRadius:16, fontSize:17, fontWeight:700,
                 color:"var(--color-ink)", cursor:"pointer", marginBottom:12,
-              }}
-            >
-              {isLast ? "Start Training" : "Next"}
-            </button>
-            {!isLast && (
-              <button onClick={finish} style={{
+              }}>
+                {isLastProf ? "Build My Plan" : "Continue"}
+              </button>
+              <button onClick={advanceProfile} style={{
+                background:"none", border:"none", color:"var(--color-muted-ash)",
+                fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
+              }}>
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Name screen (step 4) ──
+    if (onboardStep === 4) {
+      return (
+        <div className="app">
+          <div className="mobile-frame" style={{
+            display:"flex", flexDirection:"column",
+            padding:"80px 32px 44px", justifyContent:"space-between", minHeight:"100vh",
+          }}>
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://cdn.undraw.co/illustration/working-out_6ksl.svg?type=svg"
+                alt="Welcome"
+                style={{ width:"100%", maxWidth:220, margin:"0 auto 44px", display:"block" }}
+              />
+              <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:"-.02em",
+                color:"var(--color-ink)", margin:"0 0 10px" }}>
+                What should we call you?
+              </h2>
+              <p style={{ fontSize:15, color:"var(--color-muted-ash)", margin:"0 0 28px", lineHeight:1.6 }}>
+                We'll personalise your experience and keep you motivated.
+              </p>
+              <input
+                type="text" value={userName} autoFocus
+                onChange={e => setUserName(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && userName.trim()) setOnboardStep(5); }}
+                placeholder="Your first name"
+                style={{
+                  width:"100%", height:56, borderRadius:14, border:"1.5px solid var(--color-stone)",
+                  padding:"0 18px", fontSize:18, fontWeight:500, outline:"none",
+                  background:"transparent", color:"var(--color-ink)",
+                }}
+              />
+            </div>
+
+            <div style={{ paddingTop:32 }}>
+              <button
+                onClick={() => { if (userName.trim()) setOnboardStep(5); }}
+                disabled={!userName.trim()}
+                style={{
+                  width:"100%", height:54, background:"var(--color-forest-canopy)",
+                  border:"none", borderRadius:16, fontSize:17, fontWeight:700,
+                  color:"var(--color-ink)", cursor: userName.trim() ? "pointer" : "not-allowed",
+                  opacity: userName.trim() ? 1 : 0.45, marginBottom:12,
+                }}
+              >
+                Continue
+              </button>
+              <button onClick={() => setOnboardStep(5)} style={{
                 background:"none", border:"none", color:"var(--color-muted-ash)",
                 fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
               }}>
                 Skip
               </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Intro screens (steps 0–3) ──
+    const INTRO = [
+      {
+        img: "https://cdn.undraw.co/illustration/working-out_6ksl.svg?type=svg",
+        eyebrow: null,
+        title: "UpForm",
+        body: "Train smarter. Move better.",
+        cta: "Get Started",
+        isSplash: true,
+      },
+      {
+        img: "https://cdn.undraw.co/illustration/morning-workout_73u9.svg?type=svg",
+        eyebrow: "Step 1",
+        title: "Plan Your Workout",
+        body: "Set your goals, pick your exercises, and build a routine that fits around your life.",
+        cta: "Next",
+        isSplash: false,
+      },
+      {
+        img: "https://cdn.undraw.co/illustration/athletes-training_koqa.svg?type=svg",
+        eyebrow: "Step 2",
+        title: "Perfect Your Form",
+        body: "Real-time AI coaching watches every rep and gives instant feedback — train safely, see results faster.",
+        cta: "Next",
+        isSplash: false,
+      },
+      {
+        img: "https://cdn.undraw.co/illustration/fitness-stats_bd09.svg?type=svg",
+        eyebrow: "Step 3",
+        title: "Track Every Rep",
+        body: "Only clean reps count. Watch your consistency turn into measurable progress.",
+        cta: "Get Started",
+        isSplash: false,
+      },
+    ];
+
+    const intro = INTRO[onboardStep];
+
+    return (
+      <div className="app">
+        <div className="mobile-frame" style={{
+          display:"flex", flexDirection:"column",
+          padding: intro.isSplash ? "72px 32px 44px" : "60px 32px 44px",
+          justifyContent:"space-between", minHeight:"100vh",
+        }}>
+          {/* Illustration */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={intro.img}
+            alt={intro.title}
+            style={{ width:"100%", maxWidth: intro.isSplash ? 300 : 260,
+              margin:"0 auto", display:"block" }}
+          />
+
+          {/* Text */}
+          <div style={{ flex:1, paddingTop:40 }}>
+            {intro.eyebrow && (
+              <p style={{ fontSize:11, fontWeight:700, textTransform:"uppercase",
+                letterSpacing:".16em", color:"var(--color-forest-canopy)", margin:"0 0 10px" }}>
+                {intro.eyebrow}
+              </p>
             )}
+            <h1 style={{
+              fontSize: intro.isSplash ? 52 : 30,
+              fontWeight: intro.isSplash ? 800 : 700,
+              letterSpacing: intro.isSplash ? "-.03em" : "-.02em",
+              color:"var(--color-ink)", margin:"0 0 14px",
+            }}>
+              {intro.title}
+            </h1>
+            <p style={{ fontSize:16, color:"var(--color-muted-ash)", lineHeight:1.65, margin:0 }}>
+              {intro.body}
+            </p>
+          </div>
+
+          {/* Bottom controls */}
+          <div style={{ width:"100%", paddingTop:32 }}>
+            {/* Dot indicators (steps 1–3 only) */}
+            {!intro.isSplash && (
+              <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:28 }}>
+                {[1,2,3].map(i => (
+                  <div key={i} style={{
+                    height:7, borderRadius:4, transition:"width .3s",
+                    width: i === onboardStep ? 28 : 7,
+                    background: i === onboardStep ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                  }}/>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => onboardStep < 3 ? setOnboardStep(s => s + 1) : setOnboardStep(4)}
+              style={{
+                width:"100%", height:54, background:"var(--color-forest-canopy)",
+                border:"none", borderRadius:16, fontSize:17, fontWeight:700,
+                color:"var(--color-ink)", cursor:"pointer", marginBottom:14,
+              }}
+            >
+              {intro.cta}
+            </button>
+
+            {/* Existing user — skips all onboarding */}
+            <button onClick={finish} style={{
+              background:"none", border:"none", color:"var(--color-muted-ash)",
+              fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
+            }}>
+              Existing user? Log in
+            </button>
           </div>
         </div>
       </div>
