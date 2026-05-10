@@ -41,8 +41,10 @@ export default function Page() {
   const today    = new Date();
   const todayIdx = today.getDay();
 
-  const [screen,     setScreen]     = useState<Screen>("home");
-  const [mode,       setMode]       = useState("glasses");
+  const [onboarded,    setOnboarded]    = useState<boolean | null>(null); // null = checking
+  const [onboardStep,  setOnboardStep]  = useState(0);                   // 0 = splash, 1-3 = steps
+  const [screen,       setScreen]       = useState<Screen>("home");
+  const [mode,         setMode]         = useState("glasses");
   const [permState,  setPermState]  = useState<PermState>("idle");
   const [exIdx,      setExIdx]      = useState(0);
   const [reps,       setReps]       = useState(0);
@@ -177,6 +179,11 @@ export default function Page() {
   }, []);
 
   useEffect(() => { if (screen !== "camera") stopCamera(); }, [screen, stopCamera]);
+
+  // Check localStorage once on mount (safe from SSR because it's inside useEffect)
+  useEffect(() => {
+    setOnboarded(localStorage.getItem("upform_onboarded") === "true");
+  }, []);
 
   // Keep refs in sync so async callbacks (intervals) read fresh values
   useEffect(() => { currentSetRef.current = currentSet; }, [currentSet]);
@@ -823,6 +830,137 @@ export default function Page() {
     d.setDate(today.getDate() - todayIdx + i);
     return d;
   });
+
+  /* ─── SPLASH / ONBOARDING ──────────────────────────────── */
+  if (onboarded === null) return null; // SSR / localStorage check in progress
+
+  if (!onboarded) {
+    const finish = () => {
+      localStorage.setItem("upform_onboarded", "true");
+      setOnboarded(true);
+    };
+
+    const OB = [
+      {
+        img: "https://cdn.undraw.co/illustration/athletes-training_koqa.svg?type=svg",
+        title: "Form-perfect workouts",
+        body: "AI watches your pose in real time and gives instant corrections — no guesswork.",
+      },
+      {
+        img: "https://cdn.undraw.co/illustration/fitness-stats_bd09.svg?type=svg",
+        title: "Every good rep counts",
+        body: "Reps are counted automatically. Only clean form adds to your total.",
+      },
+      {
+        img: "https://cdn.undraw.co/illustration/morning-workout_73u9.svg?type=svg",
+        title: "Hands-free coaching",
+        body: 'Say "Skip" to jump to the next set. Voice cues keep you in the zone.',
+      },
+    ];
+
+    // ── Splash ──
+    if (onboardStep === 0) return (
+      <div className="app">
+        <div className="mobile-frame" style={{
+          display:"flex", flexDirection:"column",
+          alignItems:"center", padding:"72px 32px 44px",
+          justifyContent:"space-between",
+        }}>
+          <div style={{ textAlign:"center" }}>
+            <h1 style={{ fontSize:52, fontWeight:800, letterSpacing:"-.03em",
+              color:"var(--color-ink)", margin:0 }}>UpForm</h1>
+            <p style={{ color:"var(--color-muted-ash)", fontSize:16, marginTop:8 }}>
+              Your AI workout coach
+            </p>
+          </div>
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://cdn.undraw.co/illustration/working-out_6ksl.svg?type=svg"
+            alt="Working out"
+            style={{ width:"100%", maxWidth:300, margin:"40px auto" }}
+          />
+
+          <div style={{ width:"100%" }}>
+            <button onClick={() => setOnboardStep(1)} style={{
+              width:"100%", height:54, background:"var(--color-forest-canopy)",
+              border:"none", borderRadius:16, fontSize:17, fontWeight:700,
+              color:"var(--color-ink)", cursor:"pointer", marginBottom:14,
+            }}>
+              Get Started
+            </button>
+            <button onClick={finish} style={{
+              background:"none", border:"none", color:"var(--color-muted-ash)",
+              fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
+            }}>
+              Skip intro
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Onboarding steps 1–3 ──
+    const ob      = OB[onboardStep - 1];
+    const isLast  = onboardStep === 3;
+    return (
+      <div className="app">
+        <div className="mobile-frame" style={{
+          display:"flex", flexDirection:"column",
+          padding:"60px 32px 44px", justifyContent:"space-between",
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={ob.img}
+            alt={ob.title}
+            style={{ width:"100%", maxWidth:280, margin:"0 auto 36px", display:"block" }}
+          />
+
+          <div style={{ flex:1 }}>
+            <h2 style={{ fontSize:30, fontWeight:700, letterSpacing:"-.02em",
+              color:"var(--color-ink)", marginBottom:14 }}>
+              {ob.title}
+            </h2>
+            <p style={{ fontSize:16, color:"var(--color-muted-ash)", lineHeight:1.65 }}>
+              {ob.body}
+            </p>
+          </div>
+
+          <div style={{ width:"100%", paddingTop:32 }}>
+            {/* Step dots */}
+            <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:28 }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{
+                  height:8, borderRadius:4, transition:"width .3s",
+                  width: i === onboardStep ? 28 : 8,
+                  background: i === onboardStep ? "var(--color-forest-canopy)" : "var(--color-stone)",
+                }}/>
+              ))}
+            </div>
+
+            <button
+              onClick={() => isLast ? finish() : setOnboardStep(s => s + 1)}
+              style={{
+                width:"100%", height:54, background:"var(--color-forest-canopy)",
+                border:"none", borderRadius:16, fontSize:17, fontWeight:700,
+                color:"var(--color-ink)", cursor:"pointer", marginBottom:12,
+              }}
+            >
+              {isLast ? "Start Training" : "Next"}
+            </button>
+            {!isLast && (
+              <button onClick={finish} style={{
+                background:"none", border:"none", color:"var(--color-muted-ash)",
+                fontSize:14, fontWeight:500, cursor:"pointer", width:"100%",
+              }}>
+                Skip
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ─── HOME ─────────────────────────────────────────────── */
   if (screen === "home") return (
