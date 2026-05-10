@@ -61,8 +61,10 @@ export default function Page() {
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const streamRef     = useRef<MediaStream | null>(null);
   const animRef       = useRef<number | null>(null);
-  const mutedRef      = useRef(false);
-  const lastSpeakRef  = useRef({ text: "", time: 0 });
+  const mutedRef        = useRef(false);
+  const lastSpeakRef    = useRef({ text: "", time: 0 });
+  const recognitionRef  = useRef<any>(null);
+  const listenActiveRef = useRef(false);
   const repStateRef   = useRef({
     // raise fields
     phase: "down", upPhaseCued: false,
@@ -98,6 +100,14 @@ export default function Page() {
     streamRef.current = null;
     if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
   }, []);
+
+  const stopVoiceRecognition = useCallback(() => {
+    listenActiveRef.current = false;
+    try { recognitionRef.current?.abort(); } catch {}
+    recognitionRef.current = null;
+  }, []);
+
+  // startVoiceRecognition is defined after advanceAfterRest (needs it in closure)
 
   // immediate=true bypasses the between-text gap (used for rep counts + urgent form cues)
   const speak = useCallback((text: string, immediate = false) => {
@@ -137,12 +147,13 @@ export default function Page() {
 
   const exitCamera = useCallback(() => {
     stopCamera();
+    stopVoiceRecognition();
     if (restIntervalRef.current) { clearInterval(restIntervalRef.current); restIntervalRef.current = null; }
     restActiveRef.current = false;
     setRestActive(false);
     setPermState("idle"); setMpLoading(true); setExIdx(0); setCurrentSet(1);
     resetRep(); setScreen("workout");
-  }, [stopCamera, resetRep]);
+  }, [stopCamera, stopVoiceRecognition, resetRep]);
 
   // Fresh camera session: reset cue counts so step-back prompts start from 0
   useEffect(() => {
@@ -156,7 +167,7 @@ export default function Page() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
+        audio: true,   // request mic at the same time so one permission prompt covers both
       });
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
@@ -191,6 +202,65 @@ export default function Page() {
       exitCamera();
     }
   }, [speak, resetRep, exitCamera]);
+
+  const startVoiceRecognition = useCallback(() => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR || listenActiveRef.current) return;
+    listenActiveRef.current = true;
+
+    const listen = () => {
+      if (!listenActiveRef.current) return;
+      const r = new SR();
+      r.continuous     = true;
+      r.interimResults = false;
+      r.lang           = "en-US";
+
+      r.onresult = (e: any) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            const text = e.results[i][0].transcript.toLowerCase();
+            if (text.includes("skip")) {
+              speak("Skipping.", true);
+              setTimeout(() => advanceAfterRest(), 700);
+            }
+          }
+        }
+      };
+
+      r.onerror = (e: any) => {
+        // If permission denied, stop trying
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          listenActiveRef.current = false;
+        }
+      };
+
+      r.onend = () => {
+        recognitionRef.current = null;
+        // Auto-restart so we listen continuously (Chrome stops after ~60 s)
+        if (listenActiveRef.current) setTimeout(listen, 300);
+      };
+
+      try {
+        r.start();
+        recognitionRef.current = r;
+      } catch {
+        // start() throws if already started; retry after a pause
+        setTimeout(listen, 1000);
+      }
+    };
+
+    listen();
+  }, [speak, advanceAfterRest]);
+
+  // Start voice recognition when camera is live; stop on exit
+  useEffect(() => {
+    if (screen === "camera" && permState === "granted") {
+      startVoiceRecognition();
+    } else {
+      stopVoiceRecognition();
+    }
+    return () => stopVoiceRecognition();
+  }, [screen, permState, startVoiceRecognition, stopVoiceRecognition]);
 
   // Trigger rest overlay once reps hit the target
   useEffect(() => {
@@ -1021,19 +1091,24 @@ export default function Page() {
             <div style={{ background:"rgba(255,255,255,.07)", backdropFilter:"blur(24px)",
               WebkitBackdropFilter:"blur(24px)", border:"1px solid rgba(255,255,255,.14)",
               borderRadius:28, padding:"36px 28px", maxWidth:340, width:"100%", textAlign:"center" }}>
-              <div style={{ width:64, height:64, borderRadius:20, background:"rgba(255,255,255,.1)",
-                border:"1px solid rgba(255,255,255,.18)", display:"grid", placeItems:"center",
-                margin:"0 auto 20px", fontSize:28 }}>📷</div>
-              <h2 style={{ fontSize:26, fontWeight:400, color:"white", marginBottom:10, lineHeight:1.15 }}>
-                Camera Access Needed
+              <div style={{ display:"flex", gap:10, justifyContent:"center", margin:"0 auto 20px" }}>
+                <div style={{ width:56, height:56, borderRadius:18, background:"rgba(255,255,255,.1)",
+                  border:"1px solid rgba(255,255,255,.18)", display:"grid", placeItems:"center", fontSize:24 }}>📷</div>
+                <div style={{ width:56, height:56, borderRadius:18, background:"rgba(255,255,255,.1)",
+                  border:"1px solid rgba(255,255,255,.18)", display:"grid", placeItems:"center", fontSize:24 }}>🎤</div>
+              </div>
+              <h2 style={{ fontSize:20, fontWeight:700, color:"white", marginBottom:10, lineHeight:1.2 }}>
+                Camera & Microphone
               </h2>
-              <p style={{ fontSize:14, color:"rgba(255,255,255,.55)", lineHeight:1.55, marginBottom:28 }}>
-                Allow camera access so your glasses can track your reps and form in real time.
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.55)", lineHeight:1.6, marginBottom:28 }}>
+                Camera tracks your form in real time. Microphone lets you say{" "}
+                <strong style={{ color:"rgba(255,255,255,.85)" }}>"Skip"</strong>{" "}
+                to move to the next set hands-free.
               </p>
               <button onClick={requestCamera} style={{ width:"100%", height:50, borderRadius:14,
                 background:"white", color:"#1a1a1a", border:"none",
                 fontWeight:700, fontSize:15, cursor:"pointer", marginBottom:12 }}>
-                Allow Camera
+                Allow Camera & Mic
               </button>
               <button onClick={exitCamera} style={{ width:"100%", height:40, borderRadius:14,
                 background:"transparent", color:"rgba(255,255,255,.45)",
@@ -1229,6 +1304,17 @@ export default function Page() {
                 border:"1px solid rgba(255,255,255,.15)", borderRadius:12,
                 padding:"10px 20px", color:"rgba(255,255,255,.75)",
                 fontSize:13, fontWeight:600, cursor:"pointer" }}>← Back</button>
+
+              <div style={{
+                background:"rgba(0,0,0,.35)", backdropFilter:"blur(10px)",
+                border:"1px solid rgba(255,255,255,.12)", borderRadius:10,
+                padding:"6px 14px", display:"flex", alignItems:"center", gap:6,
+              }}>
+                <span style={{ fontSize:13 }}>🎤</span>
+                <span style={{ fontSize:11, color:"rgba(255,255,255,.55)", fontWeight:600 }}>
+                  say "skip"
+                </span>
+              </div>
             </div>
 
             {/* ── REST OVERLAY ── */}
