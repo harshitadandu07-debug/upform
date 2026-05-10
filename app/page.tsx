@@ -102,6 +102,7 @@ export default function Page() {
   const [restSeconds,       setRestSeconds]       = useState(60);
   const [showExerciseIntro, setShowExerciseIntro] = useState(false);
   const [paused,            setPaused]            = useState(false);
+  const [voiceCmd,          setVoiceCmd]          = useState<{ label: string; icon: string } | null>(null);
 
   const videoRef      = useRef<HTMLVideoElement>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
@@ -126,6 +127,7 @@ export default function Page() {
   const cornerStatusRef  = useRef<"good"|"bad"|"neutral">("neutral");
   const restActiveRef    = useRef(false);
   const pausedRef        = useRef(false);
+  const voiceCmdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentSetRef    = useRef(1);
   const exIdxRef         = useRef(0);
@@ -261,6 +263,20 @@ export default function Page() {
     }
   }, [speak, resetRep, exitCamera]);
 
+  const cancelVoiceCmd = useCallback(() => {
+    if (voiceCmdTimerRef.current) { clearTimeout(voiceCmdTimerRef.current); voiceCmdTimerRef.current = null; }
+    setVoiceCmd(null);
+  }, []);
+
+  const triggerVoiceCmd = useCallback((label: string, icon: string, action: () => void) => {
+    if (voiceCmdTimerRef.current) clearTimeout(voiceCmdTimerRef.current);
+    setVoiceCmd({ label, icon });
+    voiceCmdTimerRef.current = setTimeout(() => {
+      setVoiceCmd(null);
+      action();
+    }, 4000);
+  }, []);
+
   const pauseWorkout = useCallback(() => {
     pausedRef.current = true;
     setPaused(true);
@@ -295,14 +311,19 @@ export default function Page() {
           if (e.results[i].isFinal) {
             const text = e.results[i][0].transcript.toLowerCase();
             if (text.includes("skip")) {
-              speak("Skipping.", true);
-              setTimeout(() => advanceAfterRest(), 700);
+              speak("Skipping set.", true);
+              triggerVoiceCmd("Skipping set", "⏭", advanceAfterRest);
             } else if (text.includes("end workout") || text.includes("finish")) {
-              endWorkout();
+              speak("Ending workout.", true);
+              triggerVoiceCmd("Ending workout", "🏁", exitCamera);
             } else if (text.includes("pause")) {
-              pauseWorkout();
+              speak("Pausing workout.", true);
+              triggerVoiceCmd("Pausing workout", "⏸", pauseWorkout);
             } else if (text.includes("continue") || text.includes("resume") || text.includes("start")) {
-              if (pausedRef.current) resumeWorkout();
+              if (pausedRef.current) {
+                speak("Resuming.", true);
+                triggerVoiceCmd("Resuming", "▶", resumeWorkout);
+              }
             }
           }
         }
@@ -331,7 +352,7 @@ export default function Page() {
     };
 
     listen();
-  }, [speak, advanceAfterRest, pauseWorkout, resumeWorkout, endWorkout]);
+  }, [speak, advanceAfterRest, pauseWorkout, resumeWorkout, exitCamera, triggerVoiceCmd]);
 
   // Show lateral-raises form tutorial when that exercise begins in the camera screen
   useEffect(() => {
@@ -1954,6 +1975,64 @@ export default function Page() {
                 </div>
               );
             })()}
+
+            {/* ── VOICE COMMAND FEEDBACK OVERLAY ── */}
+            {voiceCmd && (
+              <div
+                onClick={cancelVoiceCmd}
+                style={{
+                  position:"absolute", inset:0, zIndex:50,
+                  display:"flex", flexDirection:"column",
+                  alignItems:"center", justifyContent:"center",
+                  background:"rgba(5,6,5,.88)",
+                  backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)",
+                  cursor:"pointer",
+                }}
+              >
+                {/* Draining progress bar at top */}
+                <div style={{ position:"absolute", top:0, left:0, right:0, height:3,
+                  background:"rgba(255,255,255,.12)" }}>
+                  <div style={{
+                    height:"100%", background:"var(--color-forest-canopy)",
+                    animation:"vc-drain 4s linear forwards",
+                    transformOrigin:"left",
+                  }}/>
+                </div>
+                <style>{`@keyframes vc-drain { from { width:100% } to { width:0% } }`}</style>
+
+                {/* Mic pulse ring */}
+                <div style={{ position:"relative", marginBottom:28 }}>
+                  <div style={{
+                    width:64, height:64, borderRadius:"50%",
+                    background:"rgba(209,244,125,.12)",
+                    animation:"vc-pulse 1.2s ease-out infinite",
+                    position:"absolute", inset:-10,
+                  }}/>
+                  <style>{`@keyframes vc-pulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.6);opacity:0} }`}</style>
+                  <div style={{
+                    width:64, height:64, borderRadius:"50%",
+                    background:"rgba(209,244,125,.18)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontSize:26,
+                  }}>
+                    {voiceCmd.icon}
+                  </div>
+                </div>
+
+                <p style={{ fontSize:11, fontWeight:700, textTransform:"uppercase",
+                  letterSpacing:".18em", color:"rgba(255,255,255,.35)", margin:"0 0 10px" }}>
+                  Voice command
+                </p>
+                <p style={{ fontSize:24, fontWeight:700, color:"white",
+                  margin:"0 0 32px", letterSpacing:"-.01em" }}>
+                  {voiceCmd.label}
+                </p>
+
+                <p style={{ fontSize:13, color:"rgba(255,255,255,.3)", margin:0 }}>
+                  Tap anywhere to cancel
+                </p>
+              </div>
+            )}
 
             {/* ── PAUSE OVERLAY ── */}
             {paused && (
