@@ -54,8 +54,9 @@ export default function Page() {
   const [noBody,     setNoBody]     = useState(false);
   const [muted,        setMuted]        = useState(false);
   const [cornerStatus, setCornerStatus] = useState<"good"|"bad"|"neutral">("neutral");
-  const [restActive,   setRestActive]   = useState(false);
-  const [restSeconds,  setRestSeconds]  = useState(60);
+  const [restActive,        setRestActive]        = useState(false);
+  const [restSeconds,       setRestSeconds]       = useState(60);
+  const [showExerciseIntro, setShowExerciseIntro] = useState(false);
 
   const videoRef      = useRef<HTMLVideoElement>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
@@ -251,6 +252,18 @@ export default function Page() {
 
     listen();
   }, [speak, advanceAfterRest]);
+
+  // Show lateral-raises form tutorial when that exercise begins in the camera screen
+  useEffect(() => {
+    if (exIdx === 1 && screen === "camera" && permState === "granted") {
+      setShowExerciseIntro(true);
+      // Auto-hide once the voice intro + detection wait (~8 s) has elapsed
+      const t = setTimeout(() => setShowExerciseIntro(false), 8500);
+      return () => clearTimeout(t);
+    } else {
+      setShowExerciseIntro(false);
+    }
+  }, [exIdx, screen, permState]);
 
   // Start voice recognition when camera is live; stop on exit
   useEffect(() => {
@@ -1172,6 +1185,114 @@ export default function Page() {
                      radial-gradient(ellipse at 100% 100%,rgba(40,220,100,.25) 0%, transparent 38%)`
                   : "none",
             }}/>
+
+            {/* ── Lateral-raises form tutorial (shown while voice intro plays) ── */}
+            {showExerciseIntro && (
+              <div style={{
+                position:"absolute", inset:0, zIndex:30,
+                display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+                background:"rgba(5,6,5,.78)", backdropFilter:"blur(6px)",
+                animation:"fadein .5s ease",
+              }}>
+                <span style={{
+                  fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:".16em",
+                  color:"rgba(255,255,255,.5)", background:"rgba(255,255,255,.08)",
+                  padding:"4px 14px", borderRadius:8, marginBottom:12,
+                  border:"1px solid rgba(255,255,255,.12)",
+                }}>Correct Form — Lateral Raises</span>
+
+                <svg viewBox="0 0 180 200" width="200" height="222" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Bench */}
+                  <rect x="36" y="132" width="108" height="7" rx="3.5"
+                    fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.2)" strokeWidth="1"/>
+                  <line x1="52" y1="139" x2="52" y2="158" stroke="rgba(255,255,255,.15)" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="128" y1="139" x2="128" y2="158" stroke="rgba(255,255,255,.15)" strokeWidth="2" strokeLinecap="round"/>
+                  {/* Legs */}
+                  <line x1="72" y1="114" x2="52" y2="132" stroke="rgba(255,255,255,.55)" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="108" y1="114" x2="128" y2="132" stroke="rgba(255,255,255,.55)" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="52" y1="139" x2="52" y2="170" stroke="rgba(255,255,255,.5)" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="128" y1="139" x2="128" y2="170" stroke="rgba(255,255,255,.5)" strokeWidth="2.5" strokeLinecap="round"/>
+                  {/* Hip */}
+                  <line x1="72" y1="114" x2="108" y2="114" stroke="rgba(255,255,255,.6)" strokeWidth="2.5" strokeLinecap="round"/>
+                  {/* Torso */}
+                  <line x1="90" y1="46" x2="90" y2="114" stroke="rgba(255,255,255,.85)" strokeWidth="4" strokeLinecap="round"/>
+                  {/* Shoulder line */}
+                  <line x1="63" y1="60" x2="117" y2="60" stroke="rgba(255,255,255,.85)" strokeWidth="3.5" strokeLinecap="round"/>
+                  {/* Neck */}
+                  <line x1="90" y1="33" x2="90" y2="46" stroke="rgba(255,255,255,.85)" strokeWidth="3" strokeLinecap="round"/>
+                  {/* Head */}
+                  <circle cx="90" cy="20" r="13" stroke="rgba(255,255,255,.85)" strokeWidth="2" fill="rgba(255,255,255,.06)"/>
+                  {/* Deltoid glows */}
+                  <circle cx="63" cy="60" r="12" fill="rgba(255,140,40,.25)"/>
+                  <circle cx="117" cy="60" r="12" fill="rgba(255,140,40,.25)"/>
+
+                  {/* LEFT UPPER ARM — amber deltoid, sweeps from hanging to horizontal */}
+                  <line x1="63" y1="60" stroke="rgba(230,130,30,.9)" strokeWidth="5" strokeLinecap="round">
+                    <animate attributeName="x2" values="51;28;51" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y2" values="88;60;88" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </line>
+                  <circle cx="63" cy="60" r="5.5" fill="rgba(230,130,30,.9)"/>
+
+                  {/* LEFT FOREARM — extends outward at the same height */}
+                  <line stroke="rgba(255,255,255,.82)" strokeWidth="4" strokeLinecap="round">
+                    <animate attributeName="x1" values="51;28;51" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y1" values="88;60;88" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="x2" values="43;8;43"  dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y2" values="112;60;112" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </line>
+                  {/* Left elbow dot */}
+                  <circle r="4" fill="rgba(230,130,30,.85)">
+                    <animate attributeName="cx" values="51;28;51" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="cy" values="88;60;88" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </circle>
+                  {/* Left dumbbell */}
+                  <g>
+                    <animateTransform attributeName="transform" type="translate"
+                      values="43,112; 8,60; 43,112" dur="2.6s" repeatCount="indefinite"
+                      calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <rect x="-9" y="-3" width="18" height="6" rx="2" fill="rgba(200,200,200,.75)"/>
+                    <rect x="-15" y="-6" width="7" height="12" rx="2" fill="rgba(160,160,160,.85)"/>
+                    <rect x="8"  y="-6" width="7" height="12" rx="2" fill="rgba(160,160,160,.85)"/>
+                  </g>
+
+                  {/* RIGHT UPPER ARM — amber deltoid (mirror) */}
+                  <line x1="117" y1="60" stroke="rgba(230,130,30,.9)" strokeWidth="5" strokeLinecap="round">
+                    <animate attributeName="x2" values="129;152;129" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y2" values="88;60;88"    dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </line>
+                  <circle cx="117" cy="60" r="5.5" fill="rgba(230,130,30,.9)"/>
+
+                  {/* RIGHT FOREARM */}
+                  <line stroke="rgba(255,255,255,.82)" strokeWidth="4" strokeLinecap="round">
+                    <animate attributeName="x1" values="129;152;129" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y1" values="88;60;88"    dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="x2" values="137;172;137" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="y2" values="112;60;112"  dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </line>
+                  {/* Right elbow dot */}
+                  <circle r="4" fill="rgba(230,130,30,.85)">
+                    <animate attributeName="cx" values="129;152;129" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <animate attributeName="cy" values="88;60;88"    dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                  </circle>
+                  {/* Right dumbbell */}
+                  <g>
+                    <animateTransform attributeName="transform" type="translate"
+                      values="137,112; 172,60; 137,112" dur="2.6s" repeatCount="indefinite"
+                      calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+                    <rect x="-9" y="-3" width="18" height="6" rx="2" fill="rgba(200,200,200,.75)"/>
+                    <rect x="-15" y="-6" width="7" height="12" rx="2" fill="rgba(160,160,160,.85)"/>
+                    <rect x="8"  y="-6" width="7" height="12" rx="2" fill="rgba(160,160,160,.85)"/>
+                  </g>
+                </svg>
+
+                <p style={{
+                  fontSize:13, color:"rgba(255,255,255,.45)", marginTop:8,
+                  fontWeight:500, letterSpacing:".01em",
+                }}>
+                  Raise arms out to shoulder height, lower slowly
+                </p>
+              </div>
+            )}
 
             {/* Step-into-frame nudge */}
             {noBody && (
