@@ -962,7 +962,7 @@ export default function Page() {
     );
   }
 
-  /* ─── HOME ─────────────────────────────────────────────── */
+  /* ─── HOME (activity screen) ───────────────────────────── */
   if (screen === "home") return (
     <div className="app">
       <div className="mobile-frame">
@@ -971,59 +971,101 @@ export default function Page() {
           <div className="icons"><span className="dot"/><span className="dot"/><span className="pill"/></div>
         </div>
         <main>
-          <div style={{ display:"flex", gap:6, marginBottom:28 }}>
-            {week.map((d, i) => {
-              const isToday = i === todayIdx;
-              return (
-                <div key={i} style={{
-                  flex:1, display:"flex", flexDirection:"column", alignItems:"center",
-                  gap:5, padding:"10px 0", borderRadius:18,
-                  background: isToday ? "var(--color-forest-canopy)" : "transparent",
-                  border:`1px solid ${isToday ? "var(--color-forest-canopy)" : "var(--color-stone)"}`,
-                }}>
-                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:".08em",
-                    textTransform:"uppercase",
-                    color: isToday ? "rgba(26,26,26,.65)" : "var(--color-muted-ash)" }}>
-                    {DAYS[d.getDay()]}
-                  </span>
-                  <span style={{ fontSize:22, fontWeight:400, lineHeight:1,
-                    color: "var(--color-ink)" }}>
-                    {d.getDate()}
-                  </span>
-                </div>
-              );
-            })}
+
+          {/* Header */}
+          <div className="top" style={{ marginBottom:18 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom:6 }}>Home</div>
+              <h2>Today is already planned.</h2>
+            </div>
           </div>
-          <div style={{ marginBottom:24 }}>
-            <p style={{ fontSize:13, color:"var(--color-muted-ash)", marginBottom:6 }}>
-              {DAYS[todayIdx]}, {MONTHS[today.getMonth()]} {today.getDate()}
+
+          {/* Hero card — dark */}
+          <div style={{
+            position:"relative", overflow:"hidden", minHeight:180,
+            padding:24, borderRadius:28,
+            background:"var(--color-ink)", border:"1px solid var(--color-ink)",
+          }}>
+            <span className="badge" style={{
+              background:"rgba(209,244,125,.15)", borderColor:"rgba(209,244,125,.35)",
+              color:"#D1F47D",
+            }}>Ready to train</span>
+            <h2 style={{ marginTop:14, fontSize:24, color:"#fff", lineHeight:1.2 }}>
+              Good to see you, Harshita.
+            </h2>
+            <p style={{ color:"rgba(255,255,255,.6)", marginTop:6, fontSize:14 }}>
+              Complete today's workout to build your streak.
             </p>
-            <h1 style={{ fontSize:44,
-              fontWeight:400, letterSpacing:"-.04em", lineHeight:1, color:"var(--color-ink)" }}>
-              Hi Harshita
-            </h1>
+            <div className="xpbar" style={{ marginTop:18 }}>
+              <span style={{ width:"72%", background:"#D1F47D" }}></span>
+            </div>
+            <p style={{
+              fontSize:11, color:"rgba(255,255,255,.4)", marginTop:6,
+              fontWeight:700, letterSpacing:".08em", textTransform:"uppercase",
+            }}>720 XP · Level 4</p>
           </div>
-          <div className="card pad">
-            <div className="eyebrow">Today&apos;s Workout</div>
-            <h3 style={{ marginBottom:16 }}>{WORKOUT.name}</h3>
-            {WORKOUT.exercises.map((e, i) => (
-              <div key={i} className="row" style={{ alignItems:"center" }}>
-                <div>
-                  <div style={{ fontWeight:600, fontSize:14, color:"var(--color-ink)" }}>{e.name}</div>
-                  <div style={{ fontSize:12, color:"var(--color-muted-ash)", marginTop:2 }}>
-                    {e.sets} sets · {e.reps} reps
+
+          {/* Metrics */}
+          <div className="metric-row" style={{ marginTop:12 }}>
+            <div className="metric"><strong>72%</strong><span>to lvl 5</span></div>
+            <div className="metric"><strong>1</strong><span>saved plans</span></div>
+            <div className="metric"><strong>0</strong><span>AR reps</span></div>
+          </div>
+
+          {/* Today's workout */}
+          <div className="card routine" style={{ marginTop:16 }}>
+            <div className="top" style={{ marginBottom:12 }}>
+              <div>
+                <span className="badge amber">Shoulders</span>
+                <h2 style={{ fontSize:24, marginTop:10 }}>{WORKOUT.name}</h2>
+                <p className="lead" style={{ marginTop:6 }}>
+                  Shoulder press and lateral raises with AR form coaching.
+                </p>
+              </div>
+              <span className="badge green">{WORKOUT.exercises.length} moves</span>
+            </div>
+
+            <div style={{ display:"grid", gap:0, marginTop:8 }}>
+              {WORKOUT.exercises.map((e, i) => (
+                <div key={i} className="row" style={{ padding:"11px 0", alignItems:"center" }}>
+                  <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+                    <span className="badge" style={{ minWidth:32, justifyContent:"center",
+                      fontWeight:700, fontSize:13 }}>{i + 1}</span>
+                    <div>
+                      <strong style={{ fontSize:15, fontWeight:700, color:"var(--color-ink)" }}>
+                        {e.name}
+                      </strong>
+                      <p className="tiny" style={{ marginTop:2 }}>
+                        Shoulders · {e.sets} sets × {e.reps} reps
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <span className="badge">{e.sets}×{e.reps}</span>
-              </div>
-            ))}
-          </div>
-          <div className="sticky-cta" style={{ marginTop:16 }}>
-            <button className="btn dark" style={{ width:"100%", fontSize:16 }}
+              ))}
+            </div>
+
+            <button className="btn dark" style={{ width:"100%", marginTop:16 }}
               onClick={() => setScreen("workout")}>
-              Start Workout
+              Start today&apos;s workout
+            </button>
+            <button className="btn ghost" style={{ width:"100%", marginTop:10 }}
+              onClick={() => setScreen("workout")}>
+              View details
             </button>
           </div>
+
+          {/* Guides card */}
+          <div className="card pad" style={{ marginTop:14 }}>
+            <div style={{ display:"flex", justifyContent:"space-between",
+              alignItems:"center", marginBottom:8 }}>
+              <h3>New to the gym?</h3>
+              <span className="badge blue">Guides</span>
+            </div>
+            <p className="tiny">
+              Step-by-step form tips and common mistakes for every exercise in your plan.
+            </p>
+          </div>
+
         </main>
       </div>
     </div>
